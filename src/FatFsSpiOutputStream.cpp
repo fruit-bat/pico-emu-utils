@@ -49,3 +49,7 @@ void FatFsSpiOutputStream::close() {
     _open = false;
   }
 }
+
+bool FatFsSpiOutputStream::closed() {
+  return !_open;
+}

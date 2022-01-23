@@ -11,6 +11,8 @@ class FatFsSpiOutputStream : public OutputStream {
   bool _open;
 public:
   FatFsSpiOutputStream(SdCardFatFsSpi* sdCard, const char* name);
+  virtual ~FatFsSpiOutputStream() { close(); }
   virtual int write(unsigned char* buffer, const unsigned int length);
   virtual void close();
+  virtual bool closed();
 };
