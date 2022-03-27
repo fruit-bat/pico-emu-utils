@@ -21,7 +21,7 @@ void FatFsSpiDirReader::foreach(std::function <void(const FILINFO* info)> cb) {
   FRESULT dfr = f_findfirst(&dj, &fno, _folder.c_str(), "*.*");
 
   while (dfr == FR_OK && fno.fname[0]) {
-    printf("file %s\n", fno.fname);
+    // printf("file %s\n", fno.fname);
     cb(&fno);
     dfr = f_findnext(&dj, &fno); // Search for next item
   }
