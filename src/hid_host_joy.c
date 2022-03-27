@@ -26,6 +26,7 @@
 
 #include "hid_host_joy.h"
 #include "hid_host_utils.h"
+#include "bsp/board.h"
 
 static tusb_hid_simple_joysick_t hid_simple_joysicks[HID_MAX_JOYSTICKS];
 
@@ -257,6 +258,7 @@ void tusb_hid_simple_joysick_process_report(tusb_hid_simple_joysick_t* simple_jo
   values->hat = tuh_hid_simple_joystick_get_axis_value(&simple_joystick->hat, report);
   values->buttons = tuh_hid_report_bits_u32(report, simple_joystick->buttons.start, simple_joystick->buttons.length);
   simple_joystick->has_values = true;
+  simple_joystick->updated = board_millis();
 }
 
 void tusb_hid_print_simple_joysick_report(tusb_hid_simple_joysick_t* simple_joystick)

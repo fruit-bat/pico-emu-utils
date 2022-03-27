@@ -115,6 +115,7 @@ typedef struct {
   tusb_hid_simple_axis_t hat;
   tusb_hid_simple_buttons_t buttons;
   tusb_hid_simple_joysick_values_t values;
+  uint32_t updated;
 } tusb_hid_simple_joysick_t;
 
 // Intermediate data structure used while parsing joystick HID report descriptors
