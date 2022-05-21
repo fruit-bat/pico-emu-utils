@@ -23,6 +23,9 @@
 
 #include "hid_host_info.h"
 
+#ifndef CFG_TUH_ENDPOINT_MAX
+#define CFG_TUH_ENDPOINT_MAX 0
+#endif
 static tusb_hid_host_info_t hid_info[CFG_TUH_ENDPOINT_MAX];
 
 tusb_hid_host_info_t* tuh_hid_get_info(uint8_t dev_addr, uint8_t instance)
