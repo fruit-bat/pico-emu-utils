@@ -39,6 +39,8 @@
 #define MAX_REPORT  4
 
 void process_kbd_report(hid_keyboard_report_t const *report, hid_keyboard_report_t const *prev_report);
+void process_kbd_mount(uint8_t dev_addr, uint8_t instance);
+void process_kbd_unmount(uint8_t dev_addr, uint8_t instance);
 
 static void process_mouse_report(hid_mouse_report_t const * report);
 static void process_generic_report(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len);
@@ -58,6 +60,12 @@ void __not_in_flash_func(handle_kbd_report)(tusb_hid_host_info_t* info, const ui
 {
   TU_LOG1("HID receive keyboard report\r\n");
   _process_kbd_report((hid_keyboard_report_t*)report);
+}
+
+void handle_keyboard_unmount(tusb_hid_host_info_t* info) {
+  TU_LOG1("HID keyboard unmount\n");
+  // Free up keybouard definitions
+  process_kbd_unmount(info->key.elements.dev_addr, info->key.elements.instance);
 }
 
 void __not_in_flash_func(handle_mouse_report)(tusb_hid_host_info_t* info, const uint8_t* report, uint8_t report_length, uint8_t report_id)
@@ -137,7 +145,8 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
         {
           case HID_USAGE_DESKTOP_KEYBOARD: {
             printf("HID receive keyboard report description\r\n");
-            tuh_hid_allocate_info(dev_addr, instance, has_report_id, &handle_kbd_report, NULL);
+            tuh_hid_allocate_info(dev_addr, instance, has_report_id, &handle_kbd_report, handle_keyboard_unmount);
+            process_kbd_mount(dev_addr, instance);
             break;
           }
           case HID_USAGE_DESKTOP_JOYSTICK: {
@@ -165,6 +174,11 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
         }
       }
     }  
+  }
+  else if ( itf_protocol == HID_ITF_PROTOCOL_KEYBOARD )
+  {
+     tuh_hid_allocate_info(dev_addr, instance, false, handle_kbd_report, handle_keyboard_unmount);
+     process_kbd_mount(dev_addr, instance);
   }
 
   // request to receive report
