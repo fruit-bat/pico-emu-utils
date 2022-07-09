@@ -35,7 +35,10 @@ private:
     _actions[1].code = 0;
     _action = 0;
   }
-
+  
+  void __not_in_flash_func(handleHidKeyPress)(uint8_t hidKeyCode);
+  void __not_in_flash_func(handleHidKeyRelease)(uint8_t hidKeyCode);
+  
   void __not_in_flash_func(handleActions)();
   uint8_t __not_in_flash_func(hidCodePage0)(uint8_t ps2code);
   uint8_t __not_in_flash_func(hidCodePage1)(uint8_t ps2code);

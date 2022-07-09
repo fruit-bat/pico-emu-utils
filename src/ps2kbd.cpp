@@ -161,6 +161,38 @@ Ps2Kbd::Ps2Kbd(PIO pio, uint base_gpio) :
   clearActions();
 }
 
+void Ps2Kbd::handleHidKeyPress(uint8_t hidKeyCode) {
+  hid_keyboard_report_t prev = _report;
+  
+  // TOOD handle modifiers
+  
+  for (int i = 0; i < HID_KEYBOARD_REPORT_MAX_KEYS; ++i) {
+    if (_report.keycode[i] == 0) {
+      _report.keycode[i] = hidKeyCode;
+      
+      // TODO send hid report
+      return;
+    }
+  }
+  
+  // TODO Overflow
+}
+
+void Ps2Kbd::handleHidKeyRelease(uint8_t hidKeyCode) {
+  hid_keyboard_report_t prev = _report;
+  
+  // TOOD handle modifiers
+  
+  for (int i = 0; i < HID_KEYBOARD_REPORT_MAX_KEYS; ++i) {
+    if (_report.keycode[i] == hidKeyCode) {
+      _report.keycode[i] = 0;
+      
+      // TODO send hid report
+      return;
+    }
+  }
+}
+
 uint8_t Ps2Kbd::hidCodePage0(uint8_t ps2code) {
   return ps2code < sizeof(ps2kbd_page_0) ? ps2kbd_page_0[ps2code] : HID_KEY_NONE;
 }
@@ -176,19 +208,19 @@ uint8_t Ps2Kbd::hidCodePage1(uint8_t ps2code) {
   case 0x1f: return HID_KEY_GUI_LEFT;
   case 0x14: return HID_KEY_CONTROL_RIGHT;
   case 0x27: return HID_KEY_GUI_RIGHT;
+  case 0x4a: return HID_KEY_KEYPAD_DIVIDE;
   case 0x5a: return HID_KEY_KEYPAD_ENTER;
+  case 0x69: return HID_KEY_END;
+  case 0x6b: return HID_KEY_ARROW_LEFT;
+  case 0x6c: return HID_KEY_HOME;
   case 0x7c: return HID_KEY_PRINT_SCREEN;
   case 0x70: return HID_KEY_INSERT;
-  case 0x6c: return HID_KEY_HOME;
-  case 0x7d: return HID_KEY_PAGE_UP;
   case 0x71: return HID_KEY_DELETE;
-  case 0x69: return HID_KEY_END;
-  case 0x7a: return HID_KEY_PAGE_DOWN;
-  case 0x74: return HID_KEY_ARROW_RIGHT;
-  case 0x6b: return HID_KEY_ARROW_LEFT;
   case 0x72: return HID_KEY_ARROW_DOWN;
+  case 0x74: return HID_KEY_ARROW_RIGHT;
   case 0x75: return HID_KEY_ARROW_UP;
-  case 0x4a: return HID_KEY_KEYPAD_DIVIDE;
+  case 0x7a: return HID_KEY_PAGE_DOWN;
+  case 0x7d: return HID_KEY_PAGE_UP;
 
   default: 
     return HID_KEY_NONE;
@@ -231,8 +263,14 @@ void Ps2Kbd::handleActions() {
     printf("HID key %s code %2.2X (%3.3d)\n",
       release ? "release" : "press",
       hidCode,
-      hidCode);   
-    
+      hidCode);
+      
+    if (release) {
+      handleHidKeyPress(hidCode);
+    }
+    else {
+      handleHidKeyPress(hidCode);
+    }
   }
 }
 
