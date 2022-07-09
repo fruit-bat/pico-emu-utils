@@ -10,15 +10,36 @@
 #include "hardware/pio.h"
 #include "hardware/gpio.h"
 
+typedef struct {
+  uint8_t code;
+  bool release;
+  uint8_t page;
+} Ps2KbdAction;
+
 class Ps2Kbd {
 private:
   PIO _pio;                        // pio0 or pio1
   uint _sm;                        // pio state machine index
   uint _base_gpio;                 // data signal gpio
   hid_keyboard_report_t _report;   // HID report structure
-  bool _release;
-  uint _keys_pressed;
-public:  
+  Ps2KbdAction _actions[2];
+  uint _action;
+  bool _double;
+  
+  inline void clearActions() {
+    _actions[0].page = 0;
+    _actions[0].release = false;
+    _actions[0].code = 0;
+    _actions[1].page = 0;
+    _actions[1].release = false;
+    _actions[1].code = 0;
+    _action = 0;
+  }
+
+  void __not_in_flash_func(handleActions)();
+  
+public:
+
   Ps2Kbd(PIO pio, uint base_gpio);
   
   void init_gpio();
