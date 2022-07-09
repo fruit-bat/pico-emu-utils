@@ -37,6 +37,8 @@ private:
   }
 
   void __not_in_flash_func(handleActions)();
+  uint8_t __not_in_flash_func(hidCodePage0)(uint8_t ps2code);
+  uint8_t __not_in_flash_func(hidCodePage1)(uint8_t ps2code);
   
 public:
 
@@ -45,17 +47,4 @@ public:
   void init_gpio();
   
   void __not_in_flash_func(tick)();
-  
-  int ps2_kbd_test() {
-      
-      if (pio_sm_is_rx_fifo_empty(_pio, _sm))
-          return 0; // no new codes in the fifo
-          
-      // pull a scan code from the PIO SM fifo
-      uint8_t code = *((io_rw_8*)&_pio->rxf[_sm] + 3);
-      
-      printf("PS/2 keycode %d\n", code);
-      
-      return code;
-  }
 };

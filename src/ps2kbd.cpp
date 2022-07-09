@@ -16,20 +16,20 @@
 
 static uint8_t ps2kbd_page_0[] {
   /* 00 (  0) */ HID_KEY_NONE,
-  /* 01 (  1) */ 0x00,
+  /* 01 (  1) */ HID_KEY_F9,
   /* 02 (  2) */ 0x00,
-  /* 03 (  3) */ 0x00,
-  /* 04 (  4) */ 0x00,
-  /* 05 (  5) */ 0x00,
-  /* 06 (  6) */ 0x00,
-  /* 07 (  7) */ 0x00,
+  /* 03 (  3) */ HID_KEY_F5,
+  /* 04 (  4) */ HID_KEY_F3,
+  /* 05 (  5) */ HID_KEY_F1,
+  /* 06 (  6) */ HID_KEY_F2,
+  /* 07 (  7) */ HID_KEY_F12,
   /* 08 (  8) */ 0x00,
-  /* 09 (  9) */ 0x00,
-  /* 0A ( 10) */ 0x00,
-  /* 0B ( 11) */ 0x00,
-  /* 0C ( 12) */ 0x00,
+  /* 09 (  9) */ HID_KEY_F10,
+  /* 0A ( 10) */ HID_KEY_F8,
+  /* 0B ( 11) */ HID_KEY_F6,
+  /* 0C ( 12) */ HID_KEY_F4,
   /* 0D ( 13) */ HID_KEY_TAB,
-  /* 0E ( 14) */ 0x00,
+  /* 0E ( 14) */ HID_KEY_GRAVE,
   /* 0F ( 15) */ 0x00,
   /* 10 ( 16) */ 0x00,
   /* 11 ( 17) */ 0x00,
@@ -42,7 +42,7 @@ static uint8_t ps2kbd_page_0[] {
   /* 18 ( 24) */ 0x00,
   /* 19 ( 25) */ 0x00,
   /* 1A ( 26) */ HID_KEY_Z,
-  /* 1B ( 27) */ HID_KEY_R,
+  /* 1B ( 27) */ HID_KEY_S,
   /* 1C ( 28) */ HID_KEY_A,
   /* 1D ( 29) */ HID_KEY_W,
   /* 1E ( 30) */ HID_KEY_2,
@@ -56,10 +56,10 @@ static uint8_t ps2kbd_page_0[] {
   /* 26 ( 38) */ HID_KEY_3,
   /* 27 ( 39) */ 0x00,
   /* 28 ( 40) */ 0x00,
-  /* 29 ( 41) */ HID_KEY_TAB,
+  /* 29 ( 41) */ HID_KEY_SPACE,
   /* 2A ( 42) */ HID_KEY_V,
   /* 2B ( 43) */ HID_KEY_F,
-  /* 2C ( 44) */ HID_KEY_S,
+  /* 2C ( 44) */ HID_KEY_T,
   /* 2D ( 45) */ HID_KEY_R,
   /* 2E ( 46) */ HID_KEY_5,
   /* 2F ( 47) */ 0x00,
@@ -80,7 +80,7 @@ static uint8_t ps2kbd_page_0[] {
   /* 3E ( 62) */ HID_KEY_8,
   /* 3F ( 63) */ 0x00,
   /* 40 ( 64) */ 0x00,
-  /* 41 ( 65) */ 0x00,
+  /* 41 ( 65) */ HID_KEY_COMMA,
   /* 42 ( 66) */ HID_KEY_K,
   /* 43 ( 67) */ HID_KEY_I,
   /* 44 ( 68) */ HID_KEY_O,
@@ -88,27 +88,27 @@ static uint8_t ps2kbd_page_0[] {
   /* 46 ( 70) */ HID_KEY_9,
   /* 47 ( 71) */ 0x00,
   /* 48 ( 72) */ 0x00,
-  /* 49 ( 73) */ 0x00,
-  /* 4A ( 74) */ 0x00,
+  /* 49 ( 73) */ HID_KEY_PERIOD,
+  /* 4A ( 74) */ HID_KEY_SLASH,
   /* 4B ( 75) */ HID_KEY_L,
-  /* 4C ( 76) */ 0x00,
+  /* 4C ( 76) */ HID_KEY_SEMICOLON,
   /* 4D ( 77) */ HID_KEY_P,
   /* 4E ( 78) */ HID_KEY_MINUS,
   /* 4F ( 79) */ 0x00,
   /* 50 ( 80) */ 0x00,
   /* 51 ( 81) */ 0x00,
-  /* 52 ( 82) */ 0x00,
+  /* 52 ( 82) */ HID_KEY_APOSTROPHE,
   /* 53 ( 83) */ 0x00,
-  /* 54 ( 84) */ 0x00,
+  /* 54 ( 84) */ HID_KEY_BRACKET_LEFT,
   /* 55 ( 85) */ HID_KEY_EQUAL,
   /* 56 ( 86) */ 0x00,
   /* 57 ( 87) */ 0x00,
-  /* 58 ( 88) */ 0x00,
+  /* 58 ( 88) */ HID_KEY_CAPS_LOCK,
   /* 59 ( 89) */ 0x00,
-  /* 5A ( 90) */ HID_KEY_RETURN,
-  /* 5B ( 91) */ 0x00,
+  /* 5A ( 90) */ HID_KEY_ENTER, // RETURN ??
+  /* 5B ( 91) */ HID_KEY_BRACKET_RIGHT,
   /* 5C ( 92) */ 0x00,
-  /* 5D ( 93) */ 0x00,
+  /* 5D ( 93) */ HID_KEY_BACKSLASH,
   /* 5E ( 94) */ 0x00,
   /* 5F ( 95) */ 0x00,
   /* 60 ( 96) */ 0x00,
@@ -135,7 +135,7 @@ static uint8_t ps2kbd_page_0[] {
   /* 75 (117) */ 0x00,
   /* 76 (118) */ HID_KEY_ESCAPE,
   /* 77 (119) */ 0x00,
-  /* 78 (120) */ 0x00,
+  /* 78 (120) */ HID_KEY_F11,
   /* 79 (121) */ 0x00,
   /* 7A (122) */ 0x00,
   /* 7B (123) */ 0x00,
@@ -146,7 +146,7 @@ static uint8_t ps2kbd_page_0[] {
   /* 80 (128) */ 0x00,
   /* 81 (129) */ 0x00,
   /* 82 (130) */ 0x00,
-  /* 83 (131) */ 0x00,
+  /* 83 (131) */ HID_KEY_F7,
   /* 84 (132) */ 0x00,
   /* 85 (133) */ 0x00,
   /* 86 (134) */ 0x00,
@@ -208,6 +208,33 @@ Ps2Kbd::Ps2Kbd(PIO pio, uint base_gpio) :
   clearActions();
 }
 
+uint8_t Ps2Kbd::hidCodePage0(uint8_t ps2code) {
+  return ps2code < sizeof(ps2kbd_page_0) ? ps2kbd_page_0[ps2code] : HID_KEY_NONE;
+}
+
+uint8_t Ps2Kbd::hidCodePage1(uint8_t ps2code) {
+  switch(ps2code) {
+//  case 0x37: return HID_KEY_POWER;
+//  case 0x3f: return HID_KEY_SLEEP;
+//  case 0x5e: return HID_KEY_WAKE;
+  case 0x7c: return HID_KEY_PRINT_SCREEN;
+  case 0x70: return HID_KEY_INSERT;
+  case 0x6c: return HID_KEY_HOME;
+  case 0x7d: return HID_KEY_PAGE_UP;
+  case 0x71: return HID_KEY_DELETE;
+  case 0x69: return HID_KEY_END;
+  case 0x7a: return HID_KEY_PAGE_DOWN;
+  case 0x74: return HID_KEY_ARROW_RIGHT;
+  case 0x6b: return HID_KEY_ARROW_LEFT;
+  case 0x72: return HID_KEY_ARROW_DOWN;
+  case 0x75: return HID_KEY_ARROW_UP;
+  case 0x5a: return HID_KEY_KEYPAD_DIVIDE;
+
+  default: 
+    return HID_KEY_NONE;
+  }
+}
+
 void Ps2Kbd::handleActions() {
   for (uint i = 0; i <= _action; ++i) {
     printf("PS/2 key %s page %2.2X (%3.3d) code %2.2X (%3.3d)\n",
@@ -216,6 +243,36 @@ void Ps2Kbd::handleActions() {
       _actions[i].page,
       _actions[i].code,
       _actions[i].code);
+  }
+  
+  uint8_t hidCode;
+  bool release;
+  if (_action == 0) {
+    switch (_actions[0].page) {
+      case 1: {
+        hidCode = hidCodePage1(_actions[0].code);
+        break; 
+      }
+      default: {
+        hidCode = hidCodePage0(_actions[0].code);
+        break;
+      }
+    }
+    release = _actions[0].release;
+  }
+  else {
+    // TODO get the HID code for extended PS/2 codes
+    hidCode = HID_KEY_NONE;
+    release = false;
+  }
+  
+  if (hidCode != HID_KEY_NONE) {
+    
+    printf("HID key %s code %2.2X (%3.3d)\n",
+      release ? "release" : "press",
+      hidCode,
+      hidCode);   
+    
   }
 }
 
