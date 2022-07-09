@@ -8,12 +8,48 @@
 #include "ps2kbd.pio.h"
 #include "hardware/clocks.h"
 
+#define HID_KEYBOARD_REPORT_MAX_KEYS 6
+
 Ps2Kbd::Ps2Kbd(PIO pio, uint base_gpio) :
   _pio(pio),
-  _base_gpio(base_gpio)
+  _base_gpio(base_gpio),
+  _release(false),
+  _keys_pressed(0)
 {
+  _report.modifier = 0;
+  for (int i = 0; i < HID_KEYBOARD_REPORT_MAX_KEYS; ++i) _report.keycode[i] = 0;
 }
 
+void Ps2Kbd::tick() {
+
+  while (!pio_sm_is_rx_fifo_empty(_pio, _sm)) {
+    // pull a scan code from the PIO SM fifo
+    uint8_t code = *((io_rw_8*)&_pio->rxf[_sm] + 3);    
+    printf("PS/2 keycode %d\n", code);
+
+    // TODO is 170 (decimal) a reset code
+
+    if (code == 0xf0) {
+      _release = true;
+    }
+    else {
+      if (_release) {
+        // process a key release
+        printf("PS/2 key release %d\n", code);
+
+      }
+      else {
+        // process a key press
+        printf("PS/2 key press %d\n", code);
+
+      }
+      
+      _release = false;
+    }
+  }
+}
+
+// TODO Error checking and reporting
 void Ps2Kbd::init_gpio() {
     // init KBD pins to input
     gpio_init(_base_gpio);     // Data
