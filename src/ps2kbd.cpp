@@ -12,6 +12,14 @@
 #include "ps2kbd.pio.h"
 #include "hardware/clocks.h"
 
+// #define DEBUG_PS2
+
+#ifdef DEBUG_PS2
+#define DBG_PRINTF(...) printf(__VA_ARGS__)
+#else
+#define DBG_PRINTF(...)
+#endif
+
 #define HID_KEYBOARD_REPORT_MAX_KEYS 6
 
 // PS/2 set 2 to HID key conversion
@@ -109,11 +117,11 @@ static uint8_t ps2kbd_page_0[] {
   /* 5A ( 90) */ HID_KEY_ENTER, // RETURN ??
   /* 5B ( 91) */ HID_KEY_BRACKET_RIGHT,
   /* 5C ( 92) */ 0x00,
-  /* 5D ( 93) */ HID_KEY_BACKSLASH,
+  /* 5D ( 93) */ HID_KEY_EUROPE_1,
   /* 5E ( 94) */ 0x00,
   /* 5F ( 95) */ HID_KEY_F24,
   /* 60 ( 96) */ 0x00,
-  /* 61 ( 97) */ 0x00,
+  /* 61 ( 97) */ HID_KEY_EUROPE_2,
   /* 62 ( 98) */ 0x00,
   /* 63 ( 99) */ 0x00,
   /* 64 (100) */ 0x00,
@@ -162,10 +170,24 @@ Ps2Kbd::Ps2Kbd(PIO pio, uint base_gpio, std::function<void(hid_keyboard_report_t
   clearActions();
 }
 
+inline static uint8_t hidKeyToMod(uint8_t hidKeyCode) {
+  uint8_t m = 0;
+  switch(hidKeyCode) {
+  case HID_KEY_CONTROL_LEFT: m = KEYBOARD_MODIFIER_LEFTCTRL; break;
+  case HID_KEY_SHIFT_LEFT: m = KEYBOARD_MODIFIER_LEFTSHIFT; break;
+  case HID_KEY_ALT_LEFT: m = KEYBOARD_MODIFIER_LEFTALT; break;
+  case HID_KEY_GUI_LEFT: m = KEYBOARD_MODIFIER_LEFTGUI; break;
+  case HID_KEY_CONTROL_RIGHT: m = KEYBOARD_MODIFIER_RIGHTCTRL; break;
+  case HID_KEY_SHIFT_RIGHT: m = KEYBOARD_MODIFIER_RIGHTSHIFT; break;
+  case HID_KEY_ALT_RIGHT: m = KEYBOARD_MODIFIER_RIGHTALT; break;
+  case HID_KEY_GUI_RIGHT: m = KEYBOARD_MODIFIER_RIGHTGUI; break;
+  default: break;
+  } 
+  return m;
+}
+
 void Ps2Kbd::handleHidKeyPress(uint8_t hidKeyCode) {
   hid_keyboard_report_t prev = _report;
-  
-  // TOOD handle modifiers
   
   // Check the key is not alreay pressed
   for (int i = 0; i < HID_KEYBOARD_REPORT_MAX_KEYS; ++i) {
@@ -173,6 +195,8 @@ void Ps2Kbd::handleHidKeyPress(uint8_t hidKeyCode) {
       return;
     }
   }
+  
+  _report.modifier |= hidKeyToMod(hidKeyCode);
   
   for (int i = 0; i < HID_KEYBOARD_REPORT_MAX_KEYS; ++i) {
     if (_report.keycode[i] == HID_KEY_NONE) {
@@ -183,13 +207,13 @@ void Ps2Kbd::handleHidKeyPress(uint8_t hidKeyCode) {
   }
   
   // TODO Overflow
-  printf("PS/2 keyboard HID overflow\n");
+  DBG_PRINTF("PS/2 keyboard HID overflow\n");
 }
 
 void Ps2Kbd::handleHidKeyRelease(uint8_t hidKeyCode) {
   hid_keyboard_report_t prev = _report;
   
-  // TOOD handle modifiers
+  _report.modifier &= ~hidKeyToMod(hidKeyCode);
   
   for (int i = 0; i < HID_KEYBOARD_REPORT_MAX_KEYS; ++i) {
     if (_report.keycode[i] == hidKeyCode) {
@@ -204,7 +228,7 @@ uint8_t Ps2Kbd::hidCodePage0(uint8_t ps2code) {
   return ps2code < sizeof(ps2kbd_page_0) ? ps2kbd_page_0[ps2code] : HID_KEY_NONE;
 }
 
-// PS/2 set 2 to HID key conversion
+// PS/2 set 2 after 0xe0 to HID key conversion
 uint8_t Ps2Kbd::hidCodePage1(uint8_t ps2code) {
   switch(ps2code) {
 // TODO these belong to a different HID usage page
@@ -235,14 +259,16 @@ uint8_t Ps2Kbd::hidCodePage1(uint8_t ps2code) {
 }
 
 void Ps2Kbd::handleActions() {
+  #ifdef DEBUG_PS2
   for (uint i = 0; i <= _action; ++i) {
-    printf("PS/2 key %s page %2.2X (%3.3d) code %2.2X (%3.3d)\n",
+    DBG_PRINTF("PS/2 key %s page %2.2X (%3.3d) code %2.2X (%3.3d)\n",
       _actions[i].release ? "release" : "press",
       _actions[i].page,
       _actions[i].page,
       _actions[i].code,
       _actions[i].code);
   }
+  #endif
   
   uint8_t hidCode;
   bool release;
@@ -267,7 +293,7 @@ void Ps2Kbd::handleActions() {
   
   if (hidCode != HID_KEY_NONE) {
     
-    printf("HID key %s code %2.2X (%3.3d)\n",
+    DBG_PRINTF("HID key %s code %2.2X (%3.3d)\n",
       release ? "release" : "press",
       hidCode,
       hidCode);
@@ -286,11 +312,12 @@ void Ps2Kbd::tick() {
   while (!pio_sm_is_rx_fifo_empty(_pio, _sm)) {
     // pull a scan code from the PIO SM fifo
     uint8_t code = *((io_rw_8*)&_pio->rxf[_sm] + 3);    
-    printf("PS/2 keycode %2.2X (%d)\n", code, code);
+    DBG_PRINTF("PS/2 keycode %2.2X (%d)\n", code, code);
 
+    // TODO Handle PS/2 overflow/error messages
     switch (code) {
       case 0xaa: {
-         printf("PS/2 keyboard Self test passed\n");
+         DBG_PRINTF("PS/2 keyboard Self test passed\n");
          break;       
       }
       case 0xe1: {
