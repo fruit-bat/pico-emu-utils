@@ -9,6 +9,7 @@
 #include "tusb.h"
 #include "hardware/pio.h"
 #include "hardware/gpio.h"
+#include <functional>
 
 typedef struct {
   uint8_t code;
@@ -25,7 +26,8 @@ private:
   Ps2KbdAction _actions[2];
   uint _action;
   bool _double;
-  
+  std::function<void(hid_keyboard_report_t *curr, hid_keyboard_report_t *prev)> _keyHandler;
+
   inline void clearActions() {
     _actions[0].page = 0;
     _actions[0].release = false;
@@ -45,7 +47,10 @@ private:
   
 public:
 
-  Ps2Kbd(PIO pio, uint base_gpio);
+  Ps2Kbd(
+    PIO pio,
+    uint base_gpio,
+    std::function<void(hid_keyboard_report_t *curr, hid_keyboard_report_t *prev)> keyHandler);
   
   void init_gpio();
   

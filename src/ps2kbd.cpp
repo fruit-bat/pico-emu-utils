@@ -150,13 +150,14 @@ static uint8_t ps2kbd_page_0[] {
   /* 83 (131) */ HID_KEY_F7
 };
 
-Ps2Kbd::Ps2Kbd(PIO pio, uint base_gpio) :
+Ps2Kbd::Ps2Kbd(PIO pio, uint base_gpio, std::function<void(hid_keyboard_report_t *curr, hid_keyboard_report_t *prev)> keyHandler) :
   _pio(pio),
   _base_gpio(base_gpio),
-  _double(false)
+  _double(false),
+  _keyHandler(keyHandler)
 {
   _report.modifier = 0;
-  for (int i = 0; i < HID_KEYBOARD_REPORT_MAX_KEYS; ++i) _report.keycode[i] = 0;
+  for (int i = 0; i < HID_KEYBOARD_REPORT_MAX_KEYS; ++i) _report.keycode[i] = HID_KEY_NONE;
   
   clearActions();
 }
@@ -166,16 +167,23 @@ void Ps2Kbd::handleHidKeyPress(uint8_t hidKeyCode) {
   
   // TOOD handle modifiers
   
+  // Check the key is not alreay pressed
   for (int i = 0; i < HID_KEYBOARD_REPORT_MAX_KEYS; ++i) {
-    if (_report.keycode[i] == 0) {
-      _report.keycode[i] = hidKeyCode;
-      
-      // TODO send hid report
+    if (_report.keycode[i] == hidKeyCode) {
+      return;
+    }
+  }
+  
+  for (int i = 0; i < HID_KEYBOARD_REPORT_MAX_KEYS; ++i) {
+    if (_report.keycode[i] == HID_KEY_NONE) {
+      _report.keycode[i] = hidKeyCode;      
+      _keyHandler(&_report, &prev);
       return;
     }
   }
   
   // TODO Overflow
+  printf("PS/2 keyboard HID overflow\n");
 }
 
 void Ps2Kbd::handleHidKeyRelease(uint8_t hidKeyCode) {
@@ -185,9 +193,8 @@ void Ps2Kbd::handleHidKeyRelease(uint8_t hidKeyCode) {
   
   for (int i = 0; i < HID_KEYBOARD_REPORT_MAX_KEYS; ++i) {
     if (_report.keycode[i] == hidKeyCode) {
-      _report.keycode[i] = 0;
-      
-      // TODO send hid report
+      _report.keycode[i] = HID_KEY_NONE;
+      _keyHandler(&_report, &prev);
       return;
     }
   }
@@ -266,7 +273,7 @@ void Ps2Kbd::handleActions() {
       hidCode);
       
     if (release) {
-      handleHidKeyPress(hidCode);
+      handleHidKeyRelease(hidCode);
     }
     else {
       handleHidKeyPress(hidCode);
