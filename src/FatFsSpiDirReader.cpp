@@ -1,5 +1,6 @@
 #include <pico/printf.h>
 #include "FatFsSpiDirReader.h"
+#include "ff.h"
 
 FatFsSpiDirReader::FatFsSpiDirReader(SdCardFatFsSpi* sdCard, const char *folder) :
   _sdCard(sdCard),

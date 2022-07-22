@@ -1,13 +1,17 @@
 #pragma once
 
-#include "sd_card.h"
+#include "ff.h"
+
 
 class SdCardFatFsSpi {
   int _unit;
-  sd_card_t *_sdcard;
+  bool _mounted;
+//  sd_card_t *_sdcard;
+  FATFS fs;
 public:
+// Only supports unit 0
   SdCardFatFsSpi(int unit);
   bool mount();
   void unmount();
-  bool mounted() { return !!_sdcard; }
+  bool mounted() { return _mounted; }
 };
