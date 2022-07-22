@@ -5,6 +5,12 @@
 #include "ff_util.h"
 #include "pico/stdlib.h"
 
+#ifdef DEBUG_FAT_SPI
+#define DBG_PRINTF(...) printf(__VA_ARGS__)
+#else
+#define DBG_PRINTF(...)
+#endif
+
 SdCardFatFsSpi::SdCardFatFsSpi(int unit) :
   _unit(unit),
   _mounted(false)
@@ -13,10 +19,10 @@ SdCardFatFsSpi::SdCardFatFsSpi(int unit) :
 
 bool SdCardFatFsSpi::mount() {
   if (mounted()) return true;
-  printf("Mounting SD card %d... ", _unit);
+  DBG_PRINTF("Mounting SD card %d... ", _unit);
   FRESULT fr = f_mount(&fs, "", 1);
   if (FR_OK != fr) {
-    printf(" error: %s (%d)\n", FRESULT_str(fr), fr);
+    DBG_PRINTF(" error: %s (%d)\n", FRESULT_str(fr), fr);
     _mounted = false;
   }
   else {
@@ -28,8 +34,8 @@ bool SdCardFatFsSpi::mount() {
 
 void SdCardFatFsSpi::unmount() {
   if (mounted()) {
-    printf("Unmounting SD card %d... ", _unit);
+    DBG_PRINTF("Unmounting SD card %d... ", _unit);
     f_unmount("");
-    printf("Ok\n");
+    DBG_PRINTF("Ok\n");
   }
 }

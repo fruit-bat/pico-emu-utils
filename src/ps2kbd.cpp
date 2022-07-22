@@ -12,8 +12,6 @@
 #include "ps2kbd.pio.h"
 #include "hardware/clocks.h"
 
-// #define DEBUG_PS2
-
 #ifdef DEBUG_PS2
 #define DBG_PRINTF(...) printf(__VA_ARGS__)
 #else

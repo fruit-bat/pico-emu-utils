@@ -1,24 +1,30 @@
 #include "FatFsSpiOutputStream.h"
 #include <pico/printf.h>
 
+#ifdef DEBUG_FAT_SPI
+#define DBG_PRINTF(...) printf(__VA_ARGS__)
+#else
+#define DBG_PRINTF(...)
+#endif
+
 FatFsSpiOutputStream::FatFsSpiOutputStream(SdCardFatFsSpi* sdCard, const char* name) :
   _sdCard(sdCard),
   _open(false)
 {
   if (!_sdCard->mounted()) {
     if (!_sdCard->mount()) {
-      printf("Failed to mount SD card\n");
+      DBG_PRINTF("Failed to mount SD card\n");
       return;
     }
   }
   
-  printf("openning file %s for write \n", name);
+  DBG_PRINTF("openning file %s for write \n", name);
   _fr = f_open(&_fil, name, FA_WRITE|FA_OPEN_ALWAYS);
   if (FR_OK != _fr && FR_EXIST != _fr) {
     printf("f_open(%s) error: %s (%d)\n", name, FRESULT_str(_fr), _fr);
   }
   else {
-    printf("openned file %s ok!\n", name);
+    DBG_PRINTF("openned file %s ok!\n", name);
     _open = true;
     _fr = FR_OK;
   }
@@ -33,11 +39,11 @@ int FatFsSpiOutputStream::write(unsigned char* buffer, const unsigned int length
   UINT bw = 0;
   _fr = f_write(&_fil, buffer, length, &bw);
   if (_fr != FR_OK) {
-    printf("f_write(%s) error: (%d)\n", FRESULT_str(_fr), _fr);
+    DBG_PRINTF("f_write(%s) error: (%d)\n", FRESULT_str(_fr), _fr);
     return -2;
   }
   if (bw < length) {
-    printf("f_write error: wrote %d of %d\n", bw, length);
+    DBG_PRINTF("f_write error: wrote %d of %d\n", bw, length);
     return -3; // failed to write
   }
   return bw;

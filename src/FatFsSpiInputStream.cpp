@@ -1,6 +1,12 @@
 #include "FatFsSpiInputStream.h"
 #include <pico/printf.h>
 
+#ifdef DEBUG_FAT_SPI
+#define DBG_PRINTF(...) printf(__VA_ARGS__)
+#else
+#define DBG_PRINTF(...)
+#endif
+
 FatFsSpiInputStream::FatFsSpiInputStream(SdCardFatFsSpi* sdCard, const char* name) :
   _sdCard(sdCard),
   _eof(false),
@@ -8,18 +14,18 @@ FatFsSpiInputStream::FatFsSpiInputStream(SdCardFatFsSpi* sdCard, const char* nam
 {
   if (!_sdCard->mounted()) {
     if (!_sdCard->mount()) {
-      printf("Failed to mount SD card\n");
+      DBG_PRINTF("Failed to mount SD card\n");
       return;
     }
   }
   
-  printf("openning file %s for read\n", name);
+  DBG_PRINTF("openning file %s for read\n", name);
   _fr = f_open(&_fil, name, FA_READ|FA_OPEN_EXISTING);
   if (FR_OK != _fr && FR_EXIST != _fr) {
-    printf("f_open(%s) error: %s (%d)\n", name, FRESULT_str(_fr), _fr);
+    DBG_PRINTF("f_open(%s) error: %s (%d)\n", name, FRESULT_str(_fr), _fr);
   }
   else {
-    printf("openned file %s ok!\n", name);
+    DBG_PRINTF("openned file %s ok!\n", name);
     _open = true;
     _fr = FR_OK;
   }
@@ -41,11 +47,11 @@ int FatFsSpiInputStream::read(unsigned char* buffer, const unsigned int length) 
   _fr = f_read(&_fil, buffer, length, &br);
   _eof = br == 0;
   if (_eof) {
-    printf("eof\n");
+    DBG_PRINTF("eof\n");
     return -1;
   }
   if (_fr != FR_OK) {
-    printf("f_read(%s) error: (%d)\n", FRESULT_str(_fr), _fr);
+    DBG_PRINTF("f_read(%s) error: (%d)\n", FRESULT_str(_fr), _fr);
     return -2;
   }
   return br;
