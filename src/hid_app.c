@@ -137,32 +137,32 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
       tuh_hid_report_info_t *report = &reports[i];
       bool has_report_id = report_count > 1 || (report[0].report_id > 0);
       
-      printf("HID report usage_page=%d, usage=%d, has_report_id=%d dev=%d instance=%d\n", report->usage_page, report->usage, has_report_id, dev_addr, instance);
+      printf("HID report usage_page=%d, usage=%d, has_report_id=%d dev_addr=%d instance=%d\n", report->usage_page, report->usage, has_report_id, dev_addr, instance);
       
       if (report->usage_page == HID_USAGE_PAGE_DESKTOP)
       {
         switch (report->usage)
         {
           case HID_USAGE_DESKTOP_KEYBOARD: {
-            printf("HID receive keyboard report description\r\n");
+            printf("HID receive keyboard report description dev_addr=%d instance=%d\r\n", dev_addr, instance);
             tuh_hid_allocate_info(dev_addr, instance, has_report_id, &handle_kbd_report, handle_keyboard_unmount);
             process_kbd_mount(dev_addr, instance);
             break;
           }
           case HID_USAGE_DESKTOP_JOYSTICK: {
-            printf("HID receive joystick report description\r\n");
+            printf("HID receive joystick report description dev_addr=%d instance=%d\r\n", dev_addr, instance);
             if(tuh_hid_allocate_info(dev_addr, instance, has_report_id, &handle_joystick_report, handle_joystick_unmount)) {
               tuh_hid_joystick_parse_report_descriptor(desc_report, desc_len, dev_addr, instance);
             }
             break;
           }
           case HID_USAGE_DESKTOP_MOUSE: {
-            printf("HID receive mouse report description\r\n");
+            printf("HID receive mouse report description dev_addr=%d instance=%d\r\n", dev_addr, instance);
             tuh_hid_allocate_info(dev_addr, instance, has_report_id, &handle_mouse_report, NULL);
             break;
           }
           case HID_USAGE_DESKTOP_GAMEPAD: {
-            printf("HID receive gamepad report description\r\n");
+            printf("HID receive gamepad report description dev_addr=%d instance=%d\r\n", dev_addr, instance);
             tuh_hid_allocate_info(dev_addr, instance, has_report_id, &handle_gamepad_report, NULL);
             // May be able to handle this in the same was as a the joystick. Needs a little investigation
             break;

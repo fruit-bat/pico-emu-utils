@@ -2,7 +2,7 @@
 
 #include "InputStream.h"
 #include "SdCardFatFsSpi.h"
-#include "f_util.h"
+#include "ff_util.h"
 
 class FatFsSpiInputStream : public InputStream {
   SdCardFatFsSpi* _sdCard;
