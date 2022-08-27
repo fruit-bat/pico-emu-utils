@@ -33,8 +33,8 @@
  * only copes with a few of them. 
  */
 
-#ifndef _TUSB_HID_JOY_H_
-#define _TUSB_HID_JOY_H_
+#ifndef _TUSB_HID_HOST_JOY_H_
+#define _TUSB_HID_HOST_JOY_H_
 
 #include "tusb.h"
 #include "class/hid/hid_rip.h"
@@ -122,8 +122,8 @@ typedef struct {
 typedef struct {
   uint32_t report_size; 
   uint32_t report_count;
-  uint32_t logical_min;
-  uint32_t logical_max;
+  int32_t logical_min;
+  int32_t logical_max;
   uint16_t usage_page;
   uint16_t usage_min;
   uint16_t usage_max;
@@ -163,7 +163,7 @@ tusb_hid_simple_joysick_t* tuh_hid_get_simple_joystick(uint8_t dev_addr, uint8_t
 void tuh_hid_free_simple_joysticks_for_instance(uint8_t dev_addr, uint8_t instance);
 
 // Free all previously allocated simple joysticks
-void tuh_hid_free_simple_joysticks();
+void tuh_hid_free_simple_joysticks(void);
 
 // Allocate a new simple joystick
 tusb_hid_simple_joysick_t* tuh_hid_allocate_simple_joystick(uint8_t dev_addr, uint8_t instance, uint8_t report_id);
@@ -191,4 +191,4 @@ uint8_t tuh_hid_get_simple_joysticks(tusb_hid_simple_joysick_t** simple_joystick
 }
 #endif
 
-#endif /* _TUSB_HID_JOY_H_ */
+#endif /* _TUSB_HID_HOST_JOY_H_ */
