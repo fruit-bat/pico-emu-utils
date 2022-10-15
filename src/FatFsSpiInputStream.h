@@ -20,4 +20,5 @@ public:
   virtual bool end();
   virtual int seek(const unsigned int pos);
   virtual int rseek(const int rpos);
+  virtual unsigned int pos();
 };
