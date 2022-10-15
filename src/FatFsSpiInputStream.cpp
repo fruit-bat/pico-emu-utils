@@ -40,8 +40,7 @@ int FatFsSpiInputStream::readByte() {
 int FatFsSpiInputStream::read(unsigned char* buffer, const unsigned int length) {
   if (_eof || !_open) return -1;
   
-  // TODO Handle errors with separate codes
-  if (FR_OK != _fr) return -1; 
+  if (FR_OK != _fr) return -2; 
 
   UINT br = 0;
   _fr = f_read(&_fil, buffer, length, &br);
@@ -71,3 +70,26 @@ bool FatFsSpiInputStream::closed() {
 bool FatFsSpiInputStream::end() {
   return _eof;
 }
+
+int FatFsSpiInputStream::seek(const unsigned int pos) {
+  if (_eof || !_open) return -1;
+
+  if (FR_OK != _fr) return -2;
+
+  _fr = f_lseek(&_fil, pos);
+
+  if (_fr != FR_OK) {
+    DBG_PRINTF("f_seek(%s) error: (%d)\n", FRESULT_str(_fr), _fr);
+    return -2;
+  }
+  return 0;
+}
+
+int FatFsSpiInputStream::rseek(const int rpos) {
+  if (_eof || !_open) return -1;
+
+  if (FR_OK != _fr) return -2;
+
+  return seek(rpos - f_tell(&_fil));
+}
+

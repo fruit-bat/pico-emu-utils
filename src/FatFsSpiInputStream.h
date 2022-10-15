@@ -18,4 +18,6 @@ public:
   virtual void close();
   virtual bool closed();
   virtual bool end();
+  virtual int seek(const unsigned int pos);
+  virtual int rseek(const int rpos);
 };
