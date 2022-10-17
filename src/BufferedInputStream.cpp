@@ -13,7 +13,7 @@ void BufferedInputStream::flood() {
   _pos = 0;
 }
 
-int BufferedInputStream::readByte() {
+int32_t BufferedInputStream::readByte() {
   if (_pos >= _len) {
     flood();
   }

@@ -31,13 +31,13 @@ FatFsSpiInputStream::FatFsSpiInputStream(SdCardFatFsSpi* sdCard, const char* nam
   }
 }
 
-int FatFsSpiInputStream::readByte() {
-  unsigned char b;
-  int r = read(&b, 1);
+int32_t FatFsSpiInputStream::readByte() {
+  uint8_t b;
+  int32_t r = read(&b, 1);
   return r < 0 ? r : b;
 }
 
-int FatFsSpiInputStream::read(unsigned char* buffer, const unsigned int length) {
+int32_t FatFsSpiInputStream::read(uint8_t* buffer, const uint32_t length) {
   if (_eof || !_open) return -1;
   if (FR_OK != _fr) return -2; 
   UINT br = 0;
@@ -69,7 +69,7 @@ bool FatFsSpiInputStream::end() {
   return _eof;
 }
 
-int FatFsSpiInputStream::seek(const unsigned int pos) {
+int32_t FatFsSpiInputStream::seek(const uint32_t pos) {
   if (_eof || !_open) return -1;
   if (FR_OK != _fr) return -2;
   _fr = f_lseek(&_fil, pos);
@@ -80,15 +80,15 @@ int FatFsSpiInputStream::seek(const unsigned int pos) {
   return 0;
 }
 
-int FatFsSpiInputStream::rseek(const int rpos) {
+int32_t FatFsSpiInputStream::rseek(const int32_t rpos) {
   if (_eof || !_open) return -1;
   if (FR_OK != _fr) return -2;
   return seek(rpos - f_tell(&_fil));
 }
 
-unsigned int FatFsSpiInputStream::pos() {
-  if (_eof || !_open) return -1;
-  if (FR_OK != _fr) return -2;
+uint32_t FatFsSpiInputStream::pos() {
+  if (_eof || !_open) return 0;
+  if (FR_OK != _fr) return 0;
   return f_tell(&_fil);
 }
 

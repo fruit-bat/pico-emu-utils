@@ -2,20 +2,20 @@
 #include "InputStream.h"
 
 class ArrayInputStream : public InputStream {
-  const unsigned char* _buf;
-  unsigned int _length;
-  unsigned int _i;
+  const uint8_t* _buf;
+  uint32_t _length;
+  uint32_t _i;
 public:
   ArrayInputStream(
-    const unsigned char* buf,
-    unsigned int length
+    const uint8_t* buf,
+    uint32_t length
   ) :
     _buf(buf),
     _length(length),
     _i(0)
   {}
   
-  virtual int readByte() { 
+  virtual int32_t readByte() { 
     return _i >= _length ? -1 : _buf[_i++];
   }
   
