@@ -15,5 +15,5 @@ public:
   virtual int32_t rseek(const int32_t rpos) { return -2; }
   virtual uint32_t pos() { return 0; }
   int32_t decodeLsbf(uint32_t* i, uint8_t n);
-  int32_t decodeLsbf(uint32_t* i, uint8_t* l, uint32_t n);
+  int32_t decodeLsbf(uint32_t* i, const uint8_t* l, uint32_t n);
 };

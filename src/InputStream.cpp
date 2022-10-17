@@ -24,7 +24,7 @@ int32_t InputStream::decodeLsbf(uint32_t* i, uint8_t n) {
   return r < 0 ? r : r < n ? -3 : n;
 }
 
-int32_t InputStream::decodeLsbf(uint32_t* i, uint8_t* l, uint32_t n) {
+int32_t InputStream::decodeLsbf(uint32_t* i, const uint8_t* l, uint32_t n) {
   for (uint32_t p = 0; p < n; ++p) {
     int32_t r = decodeLsbf(i + p, l[n]);
     if (r < 0) return r;
