@@ -13,4 +13,6 @@ public:
   virtual int seek(const unsigned int pos) { return -2; }
   virtual int rseek(const int rpos) { return -2; }
   virtual unsigned int pos() { return -2; }
+  int decodeLsbf(unsigned int* i, int n);
+  int decodeLsbf(unsigned int* i, unsigned char* l, unsigned int n);
 };

@@ -1,10 +1,9 @@
 #include "InputStream.h"
 
 int InputStream::readWord() {
-  unsigned char buf[2];
-  const int r = read(buf, 2);
-  if (r < 0) return r;
-  return buf[0] + (((int)buf[1]) << 8);
+  unsigned int i;
+  int r = decodeLsbf(&i, 2);
+  return r < 0 ? r : i;
 }
 
 int InputStream::read(unsigned char* buffer, const unsigned int length) {
@@ -16,4 +15,19 @@ int InputStream::read(unsigned char* buffer, const unsigned int length) {
     if (r < 0) return r;
     buffer[i++] = r;
   }
+}
+
+int InputStream::decodeLsbf(unsigned int* i, int n) {
+  // The following assumes Little Endian
+  *i = 0;
+  const int r = read((unsigned char*)i, n);
+  return r < 0 ? r : r < n ? -3 : n;
+}
+
+int InputStream::decodeLsbf(unsigned int* i, unsigned char* l, unsigned int n) {
+  for (unsigned int p = 0; p < n; ++p) {
+    int r = decodeLsbf(i + p, l[n]);
+    if (r < 0) return r;
+  }
+  return 0;
 }
