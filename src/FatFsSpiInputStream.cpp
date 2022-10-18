@@ -1,6 +1,6 @@
 #include "FatFsSpiInputStream.h"
 #include <pico/printf.h>
-
+#define DEBUG_FAT_SPI
 #ifdef DEBUG_FAT_SPI
 #define DBG_PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -70,6 +70,7 @@ bool FatFsSpiInputStream::end() {
 }
 
 int32_t FatFsSpiInputStream::seek(const uint32_t pos) {
+  DBG_PRINTF("seek pos (%ld)\n", pos);
   if (_eof || !_open) return -1;
   if (FR_OK != _fr) return -2;
   _fr = f_lseek(&_fil, pos);
@@ -81,9 +82,10 @@ int32_t FatFsSpiInputStream::seek(const uint32_t pos) {
 }
 
 int32_t FatFsSpiInputStream::rseek(const int32_t rpos) {
+  DBG_PRINTF("rseek rpos (%ld)\n", rpos);
   if (_eof || !_open) return -1;
   if (FR_OK != _fr) return -2;
-  return seek(rpos - f_tell(&_fil));
+  return seek(rpos + f_tell(&_fil));
 }
 
 uint32_t FatFsSpiInputStream::pos() {
