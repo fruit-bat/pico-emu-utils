@@ -71,25 +71,26 @@ bool FatFsSpiInputStream::end() {
 
 int32_t FatFsSpiInputStream::seek(const uint32_t pos) {
   DBG_PRINTF("seek pos (%ld)\n", pos);
-  if (_eof || !_open) return -1;
+  if (!_open) return -1;
   if (FR_OK != _fr) return -2;
   _fr = f_lseek(&_fil, pos);
   if (_fr != FR_OK) {
     DBG_PRINTF("f_seek(%s) error: (%d)\n", FRESULT_str(_fr), _fr);
     return -2;
   }
+  _eof = false;
   return 0;
 }
 
 int32_t FatFsSpiInputStream::rseek(const int32_t rpos) {
   DBG_PRINTF("rseek rpos (%ld)\n", rpos);
-  if (_eof || !_open) return -1;
+  if (!_open) return -1;
   if (FR_OK != _fr) return -2;
   return seek(rpos + f_tell(&_fil));
 }
 
 uint32_t FatFsSpiInputStream::pos() {
-  if (_eof || !_open) return 0;
+  if (!_open) return 0;
   if (FR_OK != _fr) return 0;
   return f_tell(&_fil);
 }
