@@ -26,6 +26,8 @@ private:
   Ps2KbdAction _actions[2];
   uint _action;
   bool _double;
+  bool _overflow;
+  
   std::function<void(hid_keyboard_report_t *curr, hid_keyboard_report_t *prev)> _keyHandler;
 
   inline void clearActions() {
@@ -44,6 +46,7 @@ private:
   void __not_in_flash_func(handleActions)();
   uint8_t __not_in_flash_func(hidCodePage0)(uint8_t ps2code);
   uint8_t __not_in_flash_func(hidCodePage1)(uint8_t ps2code);
+  void clearHidKeys();
   
 public:
 
