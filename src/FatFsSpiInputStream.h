@@ -13,12 +13,12 @@ class FatFsSpiInputStream : public InputStream {
 public:
   FatFsSpiInputStream(SdCardFatFsSpi* sdCard, const char* name);
   virtual ~FatFsSpiInputStream() { close(); }
-  virtual int readByte();
-  virtual int read(unsigned char* buffer, const unsigned int length); // returns actual length read, -1 for eof, -ve for error
+  virtual int32_t readByte();
+  virtual int32_t read(uint8_t* buffer, const uint32_t length); // returns actual length read, -1 for eof, -ve for error
   virtual void close();
   virtual bool closed();
   virtual bool end();
-  virtual int seek(const unsigned int pos);
-  virtual int rseek(const int rpos);
-  virtual unsigned int pos();
+  virtual int32_t seek(const uint32_t pos);
+  virtual int32_t rseek(const int32_t rpos);
+  virtual uint32_t pos();
 };

@@ -160,12 +160,16 @@ Ps2Kbd::Ps2Kbd(PIO pio, uint base_gpio, std::function<void(hid_keyboard_report_t
   _pio(pio),
   _base_gpio(base_gpio),
   _double(false),
+  _overflow(false),
   _keyHandler(keyHandler)
 {
+  clearHidKeys();
+  clearActions();
+}
+
+void Ps2Kbd::clearHidKeys() {
   _report.modifier = 0;
   for (int i = 0; i < HID_KEYBOARD_REPORT_MAX_KEYS; ++i) _report.keycode[i] = HID_KEY_NONE;
-  
-  clearActions();
 }
 
 inline static uint8_t hidKeyToMod(uint8_t hidKeyCode) {
@@ -303,14 +307,34 @@ void Ps2Kbd::handleActions() {
       handleHidKeyPress(hidCode);
     }
   }
+  
+  DBG_PRINTF("PS/2 HID m=%2X ", _report.modifier);
+  #ifdef DEBUG_PS2
+  for (int i = 0; i < HID_KEYBOARD_REPORT_MAX_KEYS; ++i) printf("%2X ", _report.keycode[i]);
+  printf("\n");
+  #endif
 }
 
 void Ps2Kbd::tick() {
-
+  if (pio_sm_is_rx_fifo_full(_pio, _sm)) {
+    DBG_PRINTF("PS/2 keyboard PIO overflow\n");
+    _overflow = true;
+    while (!pio_sm_is_rx_fifo_empty(_pio, _sm)) {
+      // pull a scan code from the PIO SM fifo
+      uint32_t rc = _pio->rxf[_sm];    
+      printf("PS/2 drain rc %4.4lX (%ld)\n", rc, rc);
+    }
+    clearHidKeys();
+    clearActions();
+  }
+  
   while (!pio_sm_is_rx_fifo_empty(_pio, _sm)) {
     // pull a scan code from the PIO SM fifo
-    uint8_t code = *((io_rw_8*)&_pio->rxf[_sm] + 3);    
-    DBG_PRINTF("PS/2 keycode %2.2X (%d)\n", code, code);
+    uint32_t rc = _pio->rxf[_sm];    
+    DBG_PRINTF("PS/2 rc %4.4lX (%ld)\n", rc, rc);
+    
+    uint32_t code = (rc << 2) >> 24;
+    DBG_PRINTF("PS/2 keycode %2.2lX (%ld)\n", code, code);
 
     // TODO Handle PS/2 overflow/error messages
     switch (code) {
@@ -365,7 +389,7 @@ void Ps2Kbd::init_gpio() {
     // Set the base input pin. pin index 0 is DAT, index 1 is CLK
     sm_config_set_in_pins(&c, _base_gpio);
     // Shift 8 bits to the right, autopush enabled
-    sm_config_set_in_shift(&c, true, true, 8);
+    sm_config_set_in_shift(&c, true, true, 10);
     // Deeper FIFO as we're not doing any TX
     sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_RX);
     // We don't expect clock faster than 16.7KHz and want no less
