@@ -1,7 +1,7 @@
 #include "FatFsSpiOutputStream.h"
 #include <pico/printf.h>
 
-#ifdef DEBUG_FAT_SPI
+#ifdef int32_t
 #define DBG_PRINTF(...) printf(__VA_ARGS__)
 #else
 #define DBG_PRINTF(...)
@@ -30,7 +30,7 @@ FatFsSpiOutputStream::FatFsSpiOutputStream(SdCardFatFsSpi* sdCard, const char* n
   }
 }
 
-int FatFsSpiOutputStream::write(unsigned char* buffer, const unsigned int length) {
+int32_t FatFsSpiOutputStream::write(uint8_t* buffer, const uint32_t length) {
   if (!_open) return -1;
   
   // TODO Handle errors with separate codes
