@@ -18,6 +18,8 @@ target_sources(pico_emu_utils INTERFACE
 	${CMAKE_CURRENT_LIST_DIR}/src/hid_app.c
 	${CMAKE_CURRENT_LIST_DIR}/src/ps2kbd.cpp
 	${CMAKE_CURRENT_LIST_DIR}/src/ff_util.c
+	${CMAKE_CURRENT_LIST_DIR}/src/FatFsFilePath.cpp
+	${CMAKE_CURRENT_LIST_DIR}/src/FatFsDirCache.cpp
 )
 
 target_include_directories(pico_emu_utils INTERFACE

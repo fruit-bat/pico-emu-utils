@@ -1,5 +1,6 @@
 #include "FatFsSpiOutputStream.h"
 #include <pico/printf.h>
+#include <string>
 
 #ifdef int32_t
 #define DBG_PRINTF(...) printf(__VA_ARGS__)
@@ -7,10 +8,7 @@
 #define DBG_PRINTF(...)
 #endif
 
-FatFsSpiOutputStream::FatFsSpiOutputStream(SdCardFatFsSpi* sdCard, const char* name) :
-  _sdCard(sdCard),
-  _open(false)
-{
+void FatFsSpiOutputStream::open(const char* name) {
   if (!_sdCard->mounted()) {
     if (!_sdCard->mount()) {
       DBG_PRINTF("Failed to mount SD card\n");
@@ -28,6 +26,20 @@ FatFsSpiOutputStream::FatFsSpiOutputStream(SdCardFatFsSpi* sdCard, const char* n
     _open = true;
     _fr = FR_OK;
   }
+}
+
+FatFsSpiOutputStream::FatFsSpiOutputStream(SdCardFatFsSpi* sdCard, const char* name) :
+  _sdCard(sdCard),
+  _open(false)
+{
+  open(name);
+}
+
+FatFsSpiOutputStream::FatFsSpiOutputStream(SdCardFatFsSpi* sdCard, const char* folder, const char* file) {
+  std::string fname(folder);
+  fname.append("/");
+  fname.append(file);
+  open(fname.c_str());
 }
 
 int32_t FatFsSpiOutputStream::write(uint8_t* buffer, const uint32_t length) {
