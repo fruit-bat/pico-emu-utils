@@ -35,7 +35,10 @@ FatFsSpiOutputStream::FatFsSpiOutputStream(SdCardFatFsSpi* sdCard, const char* n
   open(name);
 }
 
-FatFsSpiOutputStream::FatFsSpiOutputStream(SdCardFatFsSpi* sdCard, const char* folder, const char* file) {
+FatFsSpiOutputStream::FatFsSpiOutputStream(SdCardFatFsSpi* sdCard, const char* folder, const char* file)  :
+  _sdCard(sdCard),
+  _open(false)
+{
   std::string fname(folder);
   fname.append("/");
   fname.append(file);

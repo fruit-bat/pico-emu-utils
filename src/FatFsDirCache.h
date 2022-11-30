@@ -8,9 +8,10 @@ class FatFsDirCache {
 private:
   SdCardFatFsSpi* _sdCard;
   std::string _folder;
+  uint16_t _folderDate;
 
 public:
   FatFsDirCache(SdCardFatFsSpi* sdCard);
-  void create(char *folder);
+  void create(const char *folder);
   
 };
