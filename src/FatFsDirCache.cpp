@@ -17,8 +17,6 @@ FatFsDirCache::FatFsDirCache(SdCardFatFsSpi* sdCard) :
 }
 
 void FatFsDirCache::create(const char *folder) {
-  DBG_PRINTF("creating cache in folder '%s'\n", folder);
-  _folder = folder;
   FatFsSpiDirReader dirReader(_sdCard, folder);
   FatFsSpiOutputStream os(_sdCard, folder, ".dcache");
   dirReader.foreach([&](const FILINFO* info) { 
@@ -27,3 +25,21 @@ void FatFsDirCache::create(const char *folder) {
   });
 }
 
+void FatFsDirCache::remove(const char *folder) {
+  std::string cname(folder);
+  cname.append("/");
+  cname.append(".dcache");
+  const char* cp = cname.c_str();
+  DBG_PRINTF("FatFsDirCache: removing cache in folder '%s'\n", folder);
+  
+  if (!_sdCard->mounted()) {   
+    if (!_sdCard->mount()) {
+      DBG_PRINTF("FatFsDirCache: failed to mount SD card\n");
+      return;
+    }
+  }
+  
+  if(f_unlink(cp) != FR_OK) {
+    DBG_PRINTF("FatFsDirCache: failed to remove cache in folder '%s'\n", folder);
+  }
+}
