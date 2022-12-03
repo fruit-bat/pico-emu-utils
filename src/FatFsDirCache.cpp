@@ -17,8 +17,13 @@ FatFsDirCache::FatFsDirCache(SdCardFatFsSpi* sdCard) :
   _folder("/"),
   _open(false),
   _is(0),
-  _l(0)
+  _l(0),
+  _i(0)
 {
+}
+
+FatFsDirCache::~FatFsDirCache() {
+  close();
 }
 
 void FatFsDirCache::filename(std::string *s) {
@@ -52,6 +57,7 @@ bool FatFsDirCache::open() {
   }
   
   if (_open) {
+    _i = 0;
     if (!readCacheSize()) {
       close();
     }
@@ -67,6 +73,7 @@ void FatFsDirCache::close() {
     _is = 0;
     _open = false;
     _l = 0;
+    _i = 0;
   }
 }
 
@@ -154,9 +161,30 @@ bool FatFsDirCache::readCacheSize() {
 
 bool FatFsDirCache::seek(uint32_t i) {
   if (_open) {
+    _i = i;
     uint32_t fi = i * FILINFO_SIZE;
     DBG_PRINTF("FatFsDirCache: seek index %ld (position %ld) in folder '%s'\n", i, fi, _folder.c_str());
+    if (i >= _l) {
+      DBG_PRINTF("FatFsDirCache: seek index %ld (position %ld) in folder '%s' is out of range\n", i, fi, _folder.c_str());
+      return false;
+    }
     return _is->seek(fi);
+  }
+  else {
+    return false;
+  }
+}
+
+bool FatFsDirCache::read(FILINFO* info) {
+  if (_open) {
+    DBG_PRINTF("FatFsDirCache: reading entry at index %ld in folder '%s'\n", _i, _folder.c_str());
+    int32_t r = _is->read((uint8_t *)info, FILINFO_SIZE);
+    if (r < -1) {
+      close();
+    }
+    if (r < 0) return false;
+    _i++;
+    return true;
   }
   else {
     return false;
