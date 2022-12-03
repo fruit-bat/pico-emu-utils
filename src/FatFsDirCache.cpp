@@ -146,28 +146,7 @@ bool FatFsDirCache::readCacheSize() {
     DBG_PRINTF("FatFsDirCache: read cache size %ld (entries %ld) for folder '%s'\n", _is->size(), _l, _folder.c_str());
     return true;
   }
-  
-  /*
-  std::string cname;
-  filename(&cname);
-  const char* cp = cname.c_str();
-  
-  DBG_PRINTF("FatFsDirCache: reading cache size for file '%s'\n", cp);
-  
-  if (!_sdCard->mounted()) {   
-    if (!_sdCard->mount()) {
-      DBG_PRINTF("FatFsDirCache: failed to mount SD card\n");
-      return false;
-    }
-  }
-  
-  FILINFO info;
-  if (f_stat(cp, &info) == FR_OK) {
-    
-    
-  }
-  */
-  
+
   return false;
 }
 
