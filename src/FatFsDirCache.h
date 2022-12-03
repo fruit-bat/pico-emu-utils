@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <functional>
 #include "SdCardFatFsSpi.h"
 #include "FatFsSpiInputStream.h"
 
@@ -13,11 +14,13 @@ private:
   bool _open;
   FatFsSpiInputStream *_is;
   uint32_t _l, _i;
+  std::function<bool(const char *fname)> _filter;
   bool readCacheSize();
 public:
   FatFsDirCache(SdCardFatFsSpi* sdCard);
   ~FatFsDirCache();
   void attach(const char *folder);
+  void filter(std::function<bool(const char *fname)> filter);
   void create();
   void remove();
   bool open();

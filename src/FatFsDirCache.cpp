@@ -18,7 +18,10 @@ FatFsDirCache::FatFsDirCache(SdCardFatFsSpi* sdCard) :
   _open(false),
   _is(0),
   _l(0),
-  _i(0)
+  _i(0),
+  _filter([](const char* fname) -> bool {
+    return true;
+  })
 {
 }
 
@@ -85,6 +88,13 @@ void FatFsDirCache::attach(const char *folder) {
   DBG_PRINTF("FatFsDirCache: attaching cache to folder '%s'\n", _folder.c_str());
 }
 
+void FatFsDirCache::filter(std::function<bool(const char *fname)> filter) {
+
+  DBG_PRINTF("FatFsDirCache: attaching filter to folder '%s'\n", _folder.c_str());
+
+  _filter = filter;
+}
+
 void FatFsDirCache::create() {
 
   DBG_PRINTF("FatFsDirCache: creating cache in folder '%s'\n", _folder.c_str());
@@ -96,7 +106,9 @@ void FatFsDirCache::create() {
   FatFsSpiOutputStream os(_sdCard, folder, ".dcache");
   dirReader.foreach([&](const FILINFO* info) { 
     DBG_PRINTF("caching dir entry %s\n", info->fname);
-    os.write((uint8_t *)info, FILINFO_SIZE);
+    if (_filter(info->fname)) {
+      os.write((uint8_t *)info, FILINFO_SIZE);
+    }
   });
 }
 
