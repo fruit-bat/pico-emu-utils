@@ -25,6 +25,7 @@ public:
   void remove();
   bool open();
   void close();
+  void reload();  
   bool seek(uint32_t i);
   bool read(FILINFO* info);
   uint32_t size() { return _l; }

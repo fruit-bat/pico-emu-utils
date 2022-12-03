@@ -203,3 +203,8 @@ bool FatFsDirCache::read(FILINFO* info) {
   }
 }
 
+void FatFsDirCache::reload() {
+  remove();
+  create();
+  open();
+}
