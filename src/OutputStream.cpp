@@ -12,3 +12,13 @@ int32_t OutputStream::writeWord(int32_t w) {
   buf[1] = w >> 8;
   return write((uint8_t *)&buf, 2);
 }
+
+int32_t OutputStream::writeUnsignedLong(uint32_t ul) {
+  uint8_t buf[4];
+  buf[0] = ul & 0xff;
+  buf[1] = (ul >> 8) & 0xff;
+  buf[2] = (ul >> 16) & 0xff;
+  buf[3] = ul >> 24;
+  return write((uint8_t *)&buf, 4);
+}
+

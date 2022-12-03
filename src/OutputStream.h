@@ -10,4 +10,5 @@ public:
   virtual int32_t write(uint8_t* buffer, const uint32_t length); // return -ve for error
   virtual void close() {};
   virtual bool closed() { return true; };
+  int32_t writeUnsignedLong(uint32_t ul); // write 4 bytes LSB first, return  -ve for error
 };

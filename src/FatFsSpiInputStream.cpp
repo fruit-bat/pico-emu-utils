@@ -95,3 +95,8 @@ uint32_t FatFsSpiInputStream::pos() {
   return f_tell(&_fil);
 }
 
+uint32_t FatFsSpiInputStream::size() {
+  if (!_open) return 0;
+  if (FR_OK != _fr) return 0;
+  return f_size(&_fil);
+}

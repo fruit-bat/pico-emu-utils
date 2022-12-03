@@ -21,4 +21,5 @@ public:
   virtual int32_t seek(const uint32_t pos);
   virtual int32_t rseek(const int32_t rpos);
   virtual uint32_t pos();
+  uint32_t size();
 };
