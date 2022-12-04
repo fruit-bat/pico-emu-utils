@@ -2,7 +2,8 @@
 #include "FatFsSpiDirReader.h"
 #include "FatFsSpiOutputStream.h"
 #include "FatFsSpiInputStream.h"
-#include <cstring>
+#include "FatFsDirCacheSorter.h"
+
 #define DEBUG_FAT_SPI
 
 #ifdef DEBUG_FAT_SPI
@@ -208,40 +209,6 @@ void FatFsDirCache::reload() {
 
 bool FatFsDirCache::sort() {
   DBG_PRINTF("FatFsDirCache: sort in folder '%s'\n", _folder.c_str());
-
-  close();
-  
-  if(open(FA_OPEN_EXISTING|FA_READ|FA_WRITE)) {
-    
-    // Read a few entries as a test
-    FILINFO info;
-    if (read(&info)) {
-      DBG_PRINTF("FatFsDirCache: read '%s' for sorting \n", info.fname);    
-    }
-    else {
-      DBG_PRINTF("FatFsDirCache: error reading '%s' for sorting \n", _folder.c_str());
-    }
-    
-    seek(0);
-    strcpy(info.fname, "FISH!!");
-    
-    
-    if (write(&info)) {
-      DBG_PRINTF("FatFsDirCache: wrote '%s' for sorting \n", info.fname);    
-    }
-    else {
-      DBG_PRINTF("FatFsDirCache: error writing '%s' for sorting \n", _folder.c_str());
-    }
-    
-    close();
-  }
-  else {
-    DBG_PRINTF("FatFsDirCache: failed to open '%s' for sorting \n", _folder.c_str());
-    
-  }
-  
-  return false;
+  FatFsDirCacheSorter sorter(this);
+  return sorter.sort();
 }
-
-
-

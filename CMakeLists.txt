@@ -20,6 +20,7 @@ target_sources(pico_emu_utils INTERFACE
 	${CMAKE_CURRENT_LIST_DIR}/src/ff_util.c
 	${CMAKE_CURRENT_LIST_DIR}/src/FatFsFilePath.cpp
 	${CMAKE_CURRENT_LIST_DIR}/src/FatFsDirCache.cpp
+	${CMAKE_CURRENT_LIST_DIR}/src/FatFsDirCacheSorter.cpp
 )
 
 target_include_directories(pico_emu_utils INTERFACE
