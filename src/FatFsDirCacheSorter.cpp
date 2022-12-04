@@ -23,25 +23,7 @@ bool FatFsDirCacheSorter::sort() {
   
   if(_dir->open(FA_OPEN_EXISTING|FA_READ|FA_WRITE)) {
     
-    // Read a few entries as a test
-    FILINFO info;
-    if (_dir->read(&info)) {
-      DBG_PRINTF("FatFsDirCache: read '%s' for sorting \n", info.fname);    
-    }
-    else {
-      DBG_PRINTF("FatFsDirCache: error reading '%s' for sorting \n", _dir->folder());
-    }
-    
-    _dir->seek(0);
-    strcpy(info.fname, "FISH!!");
-    
-    
-    if (_dir->write(&info)) {
-      DBG_PRINTF("FatFsDirCache: wrote '%s' for sorting \n", info.fname);    
-    }
-    else {
-      DBG_PRINTF("FatFsDirCache: error writing '%s' for sorting \n", _dir->folder());
-    }
+    quickSort(0, _dir->size() - 1);
     
     _dir->close();
   }
@@ -58,12 +40,83 @@ bool FatFsDirCacheSorter::read(uint32_t i, FILINFO *info) {
   // 2) if not cached read from the disk
   
   _dir->seek(i);
-  return _dir->read(info);
+  bool r = _dir->read(info);
+  if (r) {
+    DBG_PRINTF("FatFsDirCacheSorter: read element at %ld '%s' \n", i, info->fname);    
+
+  }
+  else {
+    DBG_PRINTF("FatFsDirCacheSorter: error reading element at %ld\n", i);    
+  }
+  return r;
 }
 
 bool FatFsDirCacheSorter::write(uint32_t i, FILINFO *info) {
   // 1) if cached overwrite cached version
   // 2) if not cached write to the cache
+  return false;
+}
+
+int32_t FatFsDirCacheSorter::partition(int32_t low, int32_t high) {
+  DBG_PRINTF("FatFsDirCacheSorter: pivot low %ld, high %ld\n", low, high);    
+
+  FILINFO pivot;
+  
+  // select the rightmost element as pivot
+  if (!read(high, &pivot)) return -1; // TODO can I use -1 ?
+  
+  // pointer for greater element
+  int32_t i = (low - 1);
+
+  // traverse each element of the array
+  // compare them with the pivot
+  for (int32_t j = low; j < high; j++) {
+    
+    FILINFO element;
+
+    if (!read(j, &element)) return -1; // TODO can I use -1 ?
+
+    if (strncmp(element.fname, pivot.fname, FF_LFN_BUF) <= 0) {
+        
+      // if element smaller than pivot is found
+      // swap it with the greater element pointed by i
+      i++;
+      
+      // swap element at i with element at j
+      swap(i, j);
+    }
+  }
+  
+  // swap pivot with the greater element at i
+  swap(i + 1, high);
+  
+  // return the partition point
+  return (i + 1);
+}
+
+bool FatFsDirCacheSorter::swap(int32_t a, int32_t b) {
+  DBG_PRINTF("FatFsDirCacheSorter: swap %ld, %ld\n", a, b);    
+
+  return false;
+}
+
+bool FatFsDirCacheSorter::quickSort(int32_t low, int32_t high) {
+  if (low < high) {
+      
+    // find the pivot element such that
+    // elements smaller than pivot are on left of pivot
+    // elements greater than pivot are on righ of pivot
+    int32_t pi = partition(low, high);
+
+    if (pi < 0) return false;
+    
+    // recursive call on the left of pivot
+   // quickSort(array, low, pi - 1);
+
+    // recursive call on the right of pivot
+ //   quickSort(array, pi + 1, high);
+  }
+  
   return false;
 }
 
