@@ -58,7 +58,7 @@ int32_t FatFsSpiOutputStream::write(uint8_t* buffer, const uint32_t length) {
     return -2;
   }
   if (bw < length) {
-    DBG_PRINTF("f_write error: wrote %d of %d\n", bw, length);
+    DBG_PRINTF("f_write error: wrote %d of %ld\n", bw, length);
     return -3; // failed to write
   }
   return bw;

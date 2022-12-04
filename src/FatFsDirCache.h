@@ -4,6 +4,7 @@
 #include <vector>
 #include <functional>
 #include "SdCardFatFsSpi.h"
+// TODO This should be an InputOutputStream
 #include "FatFsSpiInputStream.h"
 
 class FatFsDirCache {
@@ -23,11 +24,13 @@ public:
   void filter(std::function<bool(const char *fname)> filter);
   void create();
   void remove();
-  bool open();
+  bool open(uint32_t mode);
   void close();
-  void reload();  
+  void reload();
+  bool sort();
   bool seek(uint32_t i);
   bool read(FILINFO* info);
+  bool write(FILINFO* info);
   uint32_t size() { return _l; }
   uint32_t pos() { return _i; }
   const char* folder() { return _folder.c_str(); }

@@ -22,4 +22,7 @@ public:
   virtual int32_t rseek(const int32_t rpos);
   virtual uint32_t pos();
   uint32_t size();
+  // TODO should be somewhere else
+  int32_t write(uint8_t* buffer, const uint32_t length);
+  FatFsSpiInputStream(SdCardFatFsSpi* sdCard, const char* name, uint32_t mode);
 };

@@ -1,7 +1,8 @@
 #include "FatFsDirCache.h"
 #include "FatFsSpiDirReader.h"
 #include "FatFsSpiOutputStream.h"
-
+#include "FatFsSpiInputStream.h"
+#include <cstring>
 #define DEBUG_FAT_SPI
 
 #ifdef DEBUG_FAT_SPI
@@ -35,7 +36,7 @@ void FatFsDirCache::filename(std::string *s) {
   s->append(".dcache");  
 }
 
-bool FatFsDirCache::open() {
+bool FatFsDirCache::open(uint32_t mode) {
   if (!_open) {
     DBG_PRINTF("FatFsDirCache: opening cache in folder '%s'\n", _folder.c_str());
     
@@ -44,7 +45,7 @@ bool FatFsDirCache::open() {
     const char* cp = cname.c_str();
     DBG_PRINTF("FatFsDirCache: opening cache file '%s'\n", cp);
   
-    _is = new FatFsSpiInputStream(_sdCard, cp);
+    _is = new FatFsSpiInputStream(_sdCard, cp, mode);
 
     if (_is == 0) {
       DBG_PRINTF("FatFsDirCache: failed to allocate cache file '%s'\n", cp);
@@ -182,8 +183,65 @@ bool FatFsDirCache::read(FILINFO* info) {
   }
 }
 
+bool FatFsDirCache::write(FILINFO* info) {
+  if (_open) {
+    DBG_PRINTF("FatFsDirCache: writing entry at index %ld in folder '%s'\n", _i, _folder.c_str());
+    int32_t r = _is->write((uint8_t *)info, FILINFO_SIZE);
+    if (r < -1) {
+      close();
+    }
+    if (r < 0) return false;
+    _i++;
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
 void FatFsDirCache::reload() {
   remove();
   create();
-  open();
+  sort();
+  open(FA_READ|FA_OPEN_EXISTING);
 }
+
+bool FatFsDirCache::sort() {
+  DBG_PRINTF("FatFsDirCache: sort in folder '%s'\n", _folder.c_str());
+
+  close();
+  
+  if(open(FA_OPEN_EXISTING|FA_READ|FA_WRITE)) {
+    
+    // Read a few entries as a test
+    FILINFO info;
+    if (read(&info)) {
+      DBG_PRINTF("FatFsDirCache: read '%s' for sorting \n", info.fname);    
+    }
+    else {
+      DBG_PRINTF("FatFsDirCache: error reading '%s' for sorting \n", _folder.c_str());
+    }
+    
+    seek(0);
+    strcpy(info.fname, "FISH!!");
+    
+    
+    if (write(&info)) {
+      DBG_PRINTF("FatFsDirCache: wrote '%s' for sorting \n", info.fname);    
+    }
+    else {
+      DBG_PRINTF("FatFsDirCache: error writing '%s' for sorting \n", _folder.c_str());
+    }
+    
+    close();
+  }
+  else {
+    DBG_PRINTF("FatFsDirCache: failed to open '%s' for sorting \n", _folder.c_str());
+    
+  }
+  
+  return false;
+}
+
+
+
