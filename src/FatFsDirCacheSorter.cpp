@@ -146,7 +146,10 @@ bool FatFsDirCacheSorter::quickSort(int32_t low, int32_t high) {
     int32_t pi = partition(low, high);
     DBG_PRINTF("FatFsDirCacheSorter: new partition index of %ld\n", pi);    
 
-    if (pi < 0) return false;
+    if (pi < 0) {
+      DBG_PRINTF("FatFsDirCacheSorter: ERROR sorting (partition index of) %ld\n", pi);    
+      return false;
+    }
     
     // recursive call on the left of pivot
     if (!quickSort(low, pi - 1)) return false;
