@@ -25,24 +25,20 @@ bool FatFsDirCacheSorter::sort() {
   
   if(_dir->open(FA_OPEN_EXISTING|FA_READ|FA_WRITE)) {
     
-    quickSort(0, _dir->size() - 1);
-    
-    
-    {
-      for(std::map<uint32_t, FILINFO>::iterator it = _deferred.begin(); it != _deferred.end(); ++it) {
-        DBG_PRINTF("FatFsDirCache: Sorted %ld '%s' \n", it->first, it->second.fname);
-      }
-    }
-    
+    bool r = 
+      quickSort(0, _dir->size() - 1) &&
+      flush();
     
     _dir->close();
+    
+    _deferred.clear();
+    
+    return r;
   }
   else {
     DBG_PRINTF("FatFsDirCache: failed to open '%s' for sorting \n", _dir->folder());
-    
+    return false;    
   }
-  
-  return false;
 }
 
 bool FatFsDirCacheSorter::read(uint32_t i, FILINFO *info) {
@@ -73,6 +69,22 @@ bool FatFsDirCacheSorter::write(uint32_t i, FILINFO *info) {
   // 2) if not cached write to the cache
   _deferred[i] = *info;
   
+  return true;
+}
+
+bool FatFsDirCacheSorter::flush() {
+  for(std::map<uint32_t, FILINFO>::iterator it = _deferred.begin(); it != _deferred.end(); ++it) {
+    DBG_PRINTF("FatFsDirCache: flushing %ld '%s' \n", it->first, it->second.fname);
+    if (!_dir->seek(it->first)) {
+      DBG_PRINTF("FatFsDirCache: flush failed to seek %ld '%s' \n", it->first, it->second.fname);
+      return false;
+    }
+    if (!_dir->write(&(it->second))) {
+      DBG_PRINTF("FatFsDirCache: flush failed to write %ld '%s' \n", it->first, it->second.fname);
+      return false;
+    }
+  }
+  _deferred.clear();
   return true;
 }
 

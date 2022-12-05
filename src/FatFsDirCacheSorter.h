@@ -15,6 +15,7 @@ private:
   int32_t partition(int32_t low, int32_t high);
   bool swap(int32_t a, int32_t b);
   bool quickSort(int32_t low, int32_t high);
+  bool flush();
 public:  
   FatFsDirCacheSorter(FatFsDirCache* cache);
   ~FatFsDirCacheSorter() {}

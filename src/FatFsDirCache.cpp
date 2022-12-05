@@ -161,7 +161,7 @@ bool FatFsDirCache::seek(uint32_t i) {
       DBG_PRINTF("FatFsDirCache: seek index %ld (position %ld) in folder '%s' is out of range\n", i, fi, _folder.c_str());
       return false;
     }
-    return _is->seek(fi);
+    return _is->seek(fi) >= 0;
   }
   else {
     return false;
