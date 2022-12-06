@@ -3,7 +3,7 @@
 #include <iterator>
 #include "FatFsDirCache.h"
 
-#define DEBUG_FAT_SPI
+// #define DEBUG_FAT_SPI
 
 #ifdef DEBUG_FAT_SPI
 #define DBG_PRINTF(...) printf(__VA_ARGS__)

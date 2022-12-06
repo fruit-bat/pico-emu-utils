@@ -4,7 +4,7 @@
 #include "FatFsSpiInputStream.h"
 #include "FatFsDirCacheSorter.h"
 
-#define DEBUG_FAT_SPI
+// #define DEBUG_FAT_SPI
 
 #ifdef DEBUG_FAT_SPI
 #define DBG_PRINTF(...) printf(__VA_ARGS__)

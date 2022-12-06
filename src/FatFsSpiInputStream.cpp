@@ -1,6 +1,8 @@
 #include "FatFsSpiInputStream.h"
 #include <pico/printf.h>
-#define DEBUG_FAT_SPI
+
+// #define DEBUG_FAT_SPI
+
 #ifdef DEBUG_FAT_SPI
 #define DBG_PRINTF(...) printf(__VA_ARGS__)
 #else
