@@ -26,6 +26,7 @@ public:
   void remove();
   bool open(uint32_t mode);
   void close();
+  void load();
   void reload();
   bool sort();
   bool seek(uint32_t i);

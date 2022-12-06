@@ -98,7 +98,7 @@ int32_t FatFsDirCacheSorter::partition(int32_t low, int32_t high) {
   if (!read(high, &pivot)) return -1; // TODO can I use -1 ?
   
   // pointer for greater element
-  int32_t i = (low - 1);
+  int32_t i = low - 1;
 
   // traverse each element of the array
   // compare them with the pivot
@@ -106,18 +106,20 @@ int32_t FatFsDirCacheSorter::partition(int32_t low, int32_t high) {
     
     FILINFO jth, ith;
 
-    if (!read(j, &jth)) return -1; // TODO can I use -1 ?
+    if (!read(j, &jth)) return -1;
 
-    if (strncmp(jth.fname, pivot.fname, FF_LFN_BUF) <= 0) {
+    if (strncmp(jth.fname, pivot.fname, FF_LFN_BUF) < 0) {
         
       // if element smaller than pivot is found
       // swap it with the greater element pointed by i
       i++;
       
       // swap element at i with element at j
-      if (!read(i, &ith)) return -1; // TODO can I use -1 ?
-      write(i, &jth);
-      write(j, &ith);
+      if (!(
+        read(i, &ith) &&
+        write(i, &jth) &&
+        write(j, &ith)
+      )) return -1;
     }
   }
   
@@ -127,12 +129,14 @@ int32_t FatFsDirCacheSorter::partition(int32_t low, int32_t high) {
     uint32_t h = high;
     
     FILINFO vth, hth;
-    if (!read(v, &vth)) return -1; // TODO can I use -1 ?
-    if (!read(h, &hth)) return -1; // TODO can I use -1 ?
-   
-    write(v, &hth);
-    write(h, &vth);
-  }   
+    if (!(
+      read(v, &vth) &&
+      read(h, &hth) &&
+      write(v, &hth) &&
+      write(h, &vth)
+    )) return -1;
+  }
+  
   // return the partition point
   return i + 1;
 }
@@ -151,11 +155,12 @@ bool FatFsDirCacheSorter::quickSort(int32_t low, int32_t high) {
       return false;
     }
     
-    // recursive call on the left of pivot
-    if (!quickSort(low, pi - 1)) return false;
-
-    // recursive call on the right of pivot
-    if (!quickSort(pi + 1, high)) return false;
+    if (!(
+      // recursive call on the left of pivot
+      quickSort(low, pi - 1) &&
+      // recursive call on the right of pivot
+      quickSort(pi + 1, high)
+    )) return false;
   }
   
   return true;

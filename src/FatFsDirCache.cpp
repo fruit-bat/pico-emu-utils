@@ -207,6 +207,13 @@ void FatFsDirCache::reload() {
   open(FA_READ|FA_OPEN_EXISTING);
 }
 
+void FatFsDirCache::load() {
+  if (open(FA_READ|FA_OPEN_EXISTING)) return;
+  create();
+  sort();
+  open(FA_READ|FA_OPEN_EXISTING);
+}
+
 bool FatFsDirCache::sort() {
   DBG_PRINTF("FatFsDirCache: sort in folder '%s'\n", _folder.c_str());
   FatFsDirCacheSorter sorter(this, 20);
