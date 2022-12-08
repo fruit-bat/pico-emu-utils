@@ -216,6 +216,6 @@ void FatFsDirCache::load() {
 
 bool FatFsDirCache::sort() {
   DBG_PRINTF("FatFsDirCache: sort in folder '%s'\n", _folder.c_str());
-  FatFsDirCacheSorter sorter(this, 20);
+  FatFsDirCacheSorter sorter(this, 30);
   return sorter.sort();
 }

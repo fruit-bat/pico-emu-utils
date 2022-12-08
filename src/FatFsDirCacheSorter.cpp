@@ -89,8 +89,8 @@ bool FatFsDirCacheSorter::flush() {
   return true;
 }
 
-int32_t FatFsDirCacheSorter::partition(int32_t low, int32_t high) {
-  DBG_PRINTF("FatFsDirCacheSorter: pivot low %ld, high %ld\n", low, high);    
+int32_t FatFsDirCacheSorter::partition(int16_t low, int16_t high) {
+  DBG_PRINTF("FatFsDirCacheSorter: pivot low %d, high %d\n", low, high);    
 
   FILINFO pivot;
   
@@ -108,7 +108,7 @@ int32_t FatFsDirCacheSorter::partition(int32_t low, int32_t high) {
 
     if (!read(j, &jth)) return -1;
 
-    if (strncmp(jth.fname, pivot.fname, FF_LFN_BUF) < 0) {
+    if (strncmp(jth.fname, pivot.fname, FF_LFN_BUF) <= 0) {
         
       // if element smaller than pivot is found
       // swap it with the greater element pointed by i
@@ -141,26 +141,64 @@ int32_t FatFsDirCacheSorter::partition(int32_t low, int32_t high) {
   return i + 1;
 }
 
-bool FatFsDirCacheSorter::quickSort(int32_t low, int32_t high) {
-  if (low < high) {
+bool FatFsDirCacheSorter::pushIndex(int16_t i) {
+  _indexes.push_back(i);
+  return true;
+}
+
+bool FatFsDirCacheSorter::popIndex(int16_t* i) {
+  *i = _indexes.back();
+  _indexes.pop_back();
+  return true;
+}
+
+uint32_t FatFsDirCacheSorter::indexCount() {
+  return _indexes.size();
+}
+
+bool FatFsDirCacheSorter::quickSort(int16_t low, int16_t high) {
+  
+  if (!(
+    pushIndex(low) &&
+    pushIndex(high)
+  )) return false;
+  
+  while(indexCount()) {
       
+    if (!(
+      popIndex(&high) &&
+      popIndex(&low)
+    )) return false;
+    
     // find the pivot element such that
     // elements smaller than pivot are on left of pivot
     // elements greater than pivot are on righ of pivot
     int32_t pi = partition(low, high);
+    
     DBG_PRINTF("FatFsDirCacheSorter: new partition index of %ld\n", pi);    
 
     if (pi < 0) {
       DBG_PRINTF("FatFsDirCacheSorter: ERROR sorting (partition index of) %ld\n", pi);    
       return false;
     }
-    
-    if (!(
-      // recursive call on the left of pivot
-      quickSort(low, pi - 1) &&
-      // recursive call on the right of pivot
-      quickSort(pi + 1, high)
-    )) return false;
+      
+    // If there are elements on left side of pivot,
+    // then push left side to stack
+    if (pi - 1 > low) {
+      if (!(
+        pushIndex(low) &&
+        pushIndex(pi - 1) 
+      )) return false;
+    }
+
+    // If there are elements on right side of pivot,
+    // then push right side to stack
+    if (pi + 1 < high) {
+      if (!(
+        pushIndex(pi + 1) &&
+        pushIndex(high)
+      )) return false;
+    }
   }
   
   return true;
