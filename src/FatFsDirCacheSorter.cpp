@@ -1,9 +1,8 @@
 #include "FatFsDirCacheSorter.h"
 #include <cstring>
 #include <iterator>
-#include "FatFsDirCache.h"
 
-// #define DEBUG_FAT_SPI
+#define DEBUG_FAT_SPI
 
 #ifdef DEBUG_FAT_SPI
 #define DBG_PRINTF(...) printf(__VA_ARGS__)
@@ -11,85 +10,65 @@
 #define DBG_PRINTF(...)
 #endif
 
-FatFsDirCacheSorter::FatFsDirCacheSorter(FatFsDirCache* cache, uint32_t deferredMax) :
-  _dir(cache),
-  _deferred(),
-  _deferredMax(deferredMax)
+FatFsDirCacheSorter::FatFsDirCacheSorter(
+    FatFsDirCacheInputStream* is,
+    FatFsDirCacheOutputStream* os
+) :
+  _is(is),
+  _os(os)
 {
+  uint32_t l = _is->size();
+  _index.reserve(l);
+  for (uint16_t i = 0; i < l; ++i) _index.push_back(i);
 }
 
-
 bool FatFsDirCacheSorter::sort() {
-  DBG_PRINTF("FatFsDirCache: sort in folder '%s'\n", _dir->folder());
+  DBG_PRINTF("FatFsDirCacheSorter: sort\n");
 
- _dir->close();
-  
-  if(_dir->open(FA_OPEN_EXISTING|FA_READ|FA_WRITE)) {
-    
-    bool r = 
-      quickSort(0, _dir->size() - 1) &&
+  bool r = 
+      quickSort(0, _is->size() - 1) &&
       flush();
     
-    _dir->close();
-    
-    _deferred.clear();
-    
-    return r;
-  }
-  else {
-    DBG_PRINTF("FatFsDirCache: failed to open '%s' for sorting \n", _dir->folder());
-    return false;    
-  }
+  _is->close();
+      
+  return r;
 }
 
 bool FatFsDirCacheSorter::read(uint32_t i, FILINFO *info) {
-  // 1) if cached return from the cache
-  // 2) if not cached read from the disk
-  std::map<uint32_t, FILINFO>::iterator it = _deferred.find(i);
-  if (it != _deferred.end()) {
-    *info = it->second;
-    DBG_PRINTF("FatFsDirCacheSorter: read deferred element at %ld '%s' \n", i, info->fname);    
-    return true;
-  }
-  
-  _dir->seek(i);
-  bool r = _dir->read(info);
+
+  uint16_t xi = _index[i];
+
+  bool r = _is->read(xi, info);
 #ifdef DEBUG_FAT_SPI
   if (r) {
-    DBG_PRINTF("FatFsDirCacheSorter: read element at %ld '%s' \n", i, info->fname);    
+    DBG_PRINTF("FatFsDirCacheSorter: read element at %d '%s' \n", xi, info->fname);    
   }
   else {
-    DBG_PRINTF("FatFsDirCacheSorter: error reading element at %ld\n", i);    
+    DBG_PRINTF("FatFsDirCacheSorter: error reading element at %d\n", xi);    
   }
 #endif
   return r;
 }
 
-bool FatFsDirCacheSorter::write(uint32_t i, FILINFO *info) {
-  // 1) if cached overwrite cached version
-  // 2) if not cached write to the cache
-  _deferred[i] = *info;
-  
-  return _deferred.size() < _deferredMax || flush();
-}
-
 bool FatFsDirCacheSorter::flush() {
-  for(std::map<uint32_t, FILINFO>::iterator it = _deferred.begin(); it != _deferred.end(); ++it) {
-    DBG_PRINTF("FatFsDirCache: flushing %ld '%s' \n", it->first, it->second.fname);
-    if (!_dir->seek(it->first)) {
-      DBG_PRINTF("FatFsDirCache: flush failed to seek %ld '%s' \n", it->first, it->second.fname);
-      return false;
-    }
-    if (!_dir->write(&(it->second))) {
-      DBG_PRINTF("FatFsDirCache: flush failed to write %ld '%s' \n", it->first, it->second.fname);
-      return false;
-    }
+  uint32_t l = _is->size();
+  FILINFO info;
+  for (uint16_t i = 0; i < l; ++i) {
+    uint16_t xi = _index[i];
+    if (!(read(xi, &info) && _os->write(&info))) return false;
   }
-  _deferred.clear();
+  _os->close();
   return true;
 }
 
-int32_t FatFsDirCacheSorter::partition(int16_t low, int16_t high) {
+void FatFsDirCacheSorter::swap(int16_t i, int16_t j) {
+  uint16_t xi = _index[i];
+  uint16_t xj = _index[j];
+  _index[i] = xj;
+  _index[j] = xi;
+}
+
+int16_t FatFsDirCacheSorter::partition(int16_t low, int16_t high) {
   DBG_PRINTF("FatFsDirCacheSorter: pivot low %d, high %d\n", low, high);    
 
   FILINFO pivot;
@@ -98,13 +77,13 @@ int32_t FatFsDirCacheSorter::partition(int16_t low, int16_t high) {
   if (!read(high, &pivot)) return -1; // TODO can I use -1 ?
   
   // pointer for greater element
-  int32_t i = low - 1;
+  int16_t i = low - 1;
 
   // traverse each element of the array
   // compare them with the pivot
-  for (int32_t j = low; j < high; j++) {
+  for (int16_t j = low; j < high; j++) {
     
-    FILINFO jth, ith;
+    FILINFO jth;
 
     if (!read(j, &jth)) return -1;
 
@@ -115,70 +94,52 @@ int32_t FatFsDirCacheSorter::partition(int16_t low, int16_t high) {
       i++;
       
       // swap element at i with element at j
-      if (!(
-        read(i, &ith) &&
-        write(i, &jth) &&
-        write(j, &ith)
-      )) return -1;
+      swap(i, j);
     }
   }
   
   // swap pivot with the greater element at i
-  {
-    uint32_t v = i + 1;
-    uint32_t h = high;
-    
-    FILINFO vth, hth;
-    if (!(
-      read(v, &vth) &&
-      read(h, &hth) &&
-      write(v, &hth) &&
-      write(h, &vth)
-    )) return -1;
-  }
-  
+  swap(i + 1, high);
+
   // return the partition point
   return i + 1;
 }
 
-bool FatFsDirCacheSorter::pushIndex(int16_t i) {
-  _indexes.push_back(i);
+bool FatFsDirCacheSorter::push(int16_t i) {
+  _stack.push_back(i);
   return true;
 }
 
-bool FatFsDirCacheSorter::popIndex(int16_t* i) {
-  *i = _indexes.back();
-  _indexes.pop_back();
+bool FatFsDirCacheSorter::pop(int16_t* i) {
+  *i = _stack.back();
+  _stack.pop_back();
   return true;
 }
 
-uint32_t FatFsDirCacheSorter::indexCount() {
-  return _indexes.size();
+uint32_t FatFsDirCacheSorter::stackSize() {
+  return _stack.size();
 }
 
 bool FatFsDirCacheSorter::quickSort(int16_t low, int16_t high) {
   
-  if (!(
-    pushIndex(low) &&
-    pushIndex(high)
-  )) return false;
+  if (!(push(low) && push(high))) return false;
   
-  while(indexCount()) {
+  while(stackSize()) {
       
     if (!(
-      popIndex(&high) &&
-      popIndex(&low)
+      pop(&high) &&
+      pop(&low)
     )) return false;
     
     // find the pivot element such that
     // elements smaller than pivot are on left of pivot
     // elements greater than pivot are on righ of pivot
-    int32_t pi = partition(low, high);
+    int16_t pi = partition(low, high);
     
-    DBG_PRINTF("FatFsDirCacheSorter: new partition index of %ld\n", pi);    
+    DBG_PRINTF("FatFsDirCacheSorter: new partition index of %d\n", pi);    
 
     if (pi < 0) {
-      DBG_PRINTF("FatFsDirCacheSorter: ERROR sorting (partition index of) %ld\n", pi);    
+      DBG_PRINTF("FatFsDirCacheSorter: ERROR sorting (partition index of) %d\n", pi);    
       return false;
     }
       
@@ -186,8 +147,8 @@ bool FatFsDirCacheSorter::quickSort(int16_t low, int16_t high) {
     // then push left side to stack
     if (pi - 1 > low) {
       if (!(
-        pushIndex(low) &&
-        pushIndex(pi - 1) 
+        push(low) &&
+        push(pi - 1) 
       )) return false;
     }
 
@@ -195,8 +156,8 @@ bool FatFsDirCacheSorter::quickSort(int16_t low, int16_t high) {
     // then push right side to stack
     if (pi + 1 < high) {
       if (!(
-        pushIndex(pi + 1) &&
-        pushIndex(high)
+        push(pi + 1) &&
+        push(high)
       )) return false;
     }
   }

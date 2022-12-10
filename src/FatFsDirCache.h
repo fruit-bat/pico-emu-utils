@@ -4,7 +4,6 @@
 #include <vector>
 #include <functional>
 #include "SdCardFatFsSpi.h"
-// TODO This should be an InputOutputStream
 #include "FatFsSpiInputStream.h"
 
 class FatFsDirCache {

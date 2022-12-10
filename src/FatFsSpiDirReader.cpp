@@ -14,11 +14,11 @@ FatFsSpiDirReader::FatFsSpiDirReader(SdCardFatFsSpi* sdCard, const char *folder)
 {
 }
 
-void FatFsSpiDirReader::foreach(std::function <void(const FILINFO* info)> cb) {
+bool FatFsSpiDirReader::foreach(std::function <bool(const FILINFO* info)> cb) {
   if (!_sdCard->mounted()) {   
     if (!_sdCard->mount()) {
       DBG_PRINTF("Failed to mount SD card\n");
-      return;
+      return false;
     }
   }
   DBG_PRINTF("reading folder %s\n", _folder.c_str());
@@ -29,13 +29,22 @@ void FatFsSpiDirReader::foreach(std::function <void(const FILINFO* info)> cb) {
 
   while (dfr == FR_OK && fno.fname[0]) {
     DBG_PRINTF("file %s\n", fno.fname);
-    cb(&fno);
+    if (!cb(&fno)) {
+      f_closedir(&dj);
+      return false;
+    }
     dfr = f_findnext(&dj, &fno); // Search for next item
   }
 
   f_closedir(&dj);
+  return true;
 }
 
-void FatFsSpiDirReader::foreach(std::function <void(const char* name)> cb) {
-  foreach([=](const FILINFO* info){ cb(info->fname); });
+bool FatFsSpiDirReader::foreach(std::function <bool(const char* name)> cb) {
+  foreach([=](const FILINFO* info){ 
+    if (!cb(info->fname)) {
+      return false;
+    }
+  });
+  return true;
 }

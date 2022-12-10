@@ -9,28 +9,38 @@
 #include "ff.h"
 #include <map>
 #include <vector>
+#include "FatFsDirCacheInputStream.h"
+#include "FatFsDirCacheOutputStream.h"
 
 class FatFsDirCache;
 
 class FatFsDirCacheSorter {
 private:
-  FatFsDirCache* _dir;
-  std::map<uint32_t, FILINFO> _deferred;
-  std::vector<int16_t> _indexes;
+
+  FatFsDirCacheInputStream* _is;
+  FatFsDirCacheOutputStream* _os;
   
-  uint32_t _deferredMax;
-  
+  std::vector<int16_t> _stack;
+  std::vector<int16_t> _index;
+
   bool read(uint32_t i, FILINFO *info);
-  bool write(uint32_t i, FILINFO *info);
-  int32_t partition(int16_t low, int16_t high);
+  void swap(int16_t low, int16_t high);
+  int16_t partition(int16_t low, int16_t high);
   bool quickSort(int16_t low, int16_t high);
   bool flush();
-  bool pushIndex(int16_t i);
-  bool popIndex(int16_t* i);
-  uint32_t indexCount();
-public:  
-  FatFsDirCacheSorter(FatFsDirCache* cache, uint32_t deferredMax);
+  bool push(int16_t i);
+  bool pop(int16_t* i);
+  uint32_t stackSize();
+  
+public:
+
+  FatFsDirCacheSorter(
+    FatFsDirCacheInputStream* is,
+    FatFsDirCacheOutputStream* os
+  );
+  
   ~FatFsDirCacheSorter() {}
+  
   bool sort();
 };
 
