@@ -2,7 +2,7 @@
 #include <pico/printf.h>
 #include <string>
 
-#ifdef int32_t
+#ifdef DEBUG_FAT_
 #define DBG_PRINTF(...) printf(__VA_ARGS__)
 #else
 #define DBG_PRINTF(...)
