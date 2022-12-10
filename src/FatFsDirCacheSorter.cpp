@@ -2,7 +2,7 @@
 #include <cstring>
 #include <iterator>
 
-#define DEBUG_FAT_SPI
+// #define DEBUG_FAT_SPI
 
 #ifdef DEBUG_FAT_SPI
 #define DBG_PRINTF(...) printf(__VA_ARGS__)
@@ -54,8 +54,7 @@ bool FatFsDirCacheSorter::flush() {
   uint32_t l = _is->size();
   FILINFO info;
   for (uint16_t i = 0; i < l; ++i) {
-    uint16_t xi = _index[i];
-    if (!(read(xi, &info) && _os->write(&info))) return false;
+    if (!(read(i, &info) && _os->write(&info))) return false;
   }
   _os->close();
   return true;
@@ -126,10 +125,7 @@ bool FatFsDirCacheSorter::quickSort(int16_t low, int16_t high) {
   
   while(stackSize()) {
       
-    if (!(
-      pop(&high) &&
-      pop(&low)
-    )) return false;
+    if (!(pop(&high) && pop(&low))) return false;
     
     // find the pivot element such that
     // elements smaller than pivot are on left of pivot
@@ -146,19 +142,13 @@ bool FatFsDirCacheSorter::quickSort(int16_t low, int16_t high) {
     // If there are elements on left side of pivot,
     // then push left side to stack
     if (pi - 1 > low) {
-      if (!(
-        push(low) &&
-        push(pi - 1) 
-      )) return false;
+      if (!(push(low) && push(pi - 1))) return false;
     }
 
     // If there are elements on right side of pivot,
     // then push right side to stack
     if (pi + 1 < high) {
-      if (!(
-        push(pi + 1) &&
-        push(high)
-      )) return false;
+      if (!(push(pi + 1) && push(high))) return false;
     }
   }
   

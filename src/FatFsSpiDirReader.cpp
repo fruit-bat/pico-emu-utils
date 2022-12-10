@@ -42,9 +42,7 @@ bool FatFsSpiDirReader::foreach(std::function <bool(const FILINFO* info)> cb) {
 
 bool FatFsSpiDirReader::foreach(std::function <bool(const char* name)> cb) {
   foreach([=](const FILINFO* info){ 
-    if (!cb(info->fname)) {
-      return false;
-    }
+    return cb(info->fname);
   });
   return true;
 }

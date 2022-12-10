@@ -18,13 +18,7 @@ public:
   FatFsDirCacheOutputStream(SdCardFatFsSpi* sdCard);
   
   ~FatFsDirCacheOutputStream();
-  
-  bool create(
-    const char* folder, 
-    const char* filename,
-    std::function<bool(const char *fname)> filter
-  );
-    
+     
   bool open(
     const char* folder, 
     const char* filename

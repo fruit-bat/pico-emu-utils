@@ -32,4 +32,5 @@ public:
   bool read(uint32_t i, FILINFO *info);
   uint32_t size() { return _l; }
   uint32_t pos() { return _i; }
+  bool isOpen() { return _open; }
 };

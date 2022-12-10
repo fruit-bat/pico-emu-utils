@@ -2,7 +2,7 @@
 #include "FatFsSpiDirReader.h"
 #include "FatFsSpiOutputStream.h"
 
-#define DEBUG_FAT_SPI
+// #define DEBUG_FAT_SPI
 
 #ifdef DEBUG_FAT_SPI
 #define DBG_PRINTF(...) printf(__VA_ARGS__)
@@ -27,31 +27,30 @@ bool FatFsDirCacheOutputStream::open(
   const char* folder, 
   const char* filename
 ) {
+  if (_open) close();
   
-  if (!_open) {
-    DBG_PRINTF("FatFsDirCacheOutputStream: opening '%s' in '%s'\n", filename, folder);
-    
-    std::string cname;
-    cname.append(folder);
-    cname.append("/");
-    cname.append(filename);
-
-    const char* cp = cname.c_str();
-    DBG_PRINTF("FatFsDirCacheOutputStream: opening cache file '%s'\n", cp);
+  DBG_PRINTF("FatFsDirCacheOutputStream: opening '%s' in '%s'\n", filename, folder);
   
-    _os = new FatFsSpiOutputStream(_sdCard, cp);
+  std::string cname;
+  cname.append(folder);
+  cname.append("/");
+  cname.append(filename);
 
-    if (_os == 0) {
-      DBG_PRINTF("FatFsDirCacheOutputStream: failed to allocate cache file '%s'\n", cp);
-    }
-    else if (_os->closed()) {
-      DBG_PRINTF("FatFsDirCacheOutputStream: failed to open cache file '%s'\n", cp);
-      if (_os) delete _os;
-      _os = 0;
-    }
-    else {
-      _open = true;      
-    }
+  const char* cp = cname.c_str();
+  DBG_PRINTF("FatFsDirCacheOutputStream: opening cache file '%s'\n", cp);
+
+  _os = new FatFsSpiOutputStream(_sdCard, cp);
+
+  if (_os == 0) {
+    DBG_PRINTF("FatFsDirCacheOutputStream: failed to allocate cache file '%s'\n", cp);
+  }
+  else if (_os->closed()) {
+    DBG_PRINTF("FatFsDirCacheOutputStream: failed to open cache file '%s'\n", cp);
+    if (_os) delete _os;
+    _os = 0;
+  }
+  else {
+    _open = true;      
   }
   
   return _open;
