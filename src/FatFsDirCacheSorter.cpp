@@ -26,7 +26,7 @@ bool FatFsDirCacheSorter::sort() {
   DBG_PRINTF("FatFsDirCacheSorter: sort\n");
 
   bool r = 
-      quickSort(0, _is->size() - 1) &&
+      lampSort() &&
       flush();
     
   _is->close();
@@ -67,41 +67,8 @@ void FatFsDirCacheSorter::swap(int16_t i, int16_t j) {
   _index[j] = xi;
 }
 
-int16_t FatFsDirCacheSorter::partition(int16_t low, int16_t high) {
-  DBG_PRINTF("FatFsDirCacheSorter: pivot low %d, high %d\n", low, high);    
-
-  FILINFO pivot;
-  
-  // select the rightmost element as pivot
-  if (!read(high, &pivot)) return -1; // TODO can I use -1 ?
-  
-  // pointer for greater element
-  int16_t i = low - 1;
-
-  // traverse each element of the array
-  // compare them with the pivot
-  for (int16_t j = low; j < high; j++) {
-    
-    FILINFO jth;
-
-    if (!read(j, &jth)) return -1;
-
-    if (strncmp(jth.fname, pivot.fname, FF_LFN_BUF) <= 0) {
-        
-      // if element smaller than pivot is found
-      // swap it with the greater element pointed by i
-      i++;
-      
-      // swap element at i with element at j
-      swap(i, j);
-    }
-  }
-  
-  // swap pivot with the greater element at i
-  swap(i + 1, high);
-
-  // return the partition point
-  return i + 1;
+int FatFsDirCacheSorter::compare(FILINFO *a, FILINFO *b) {
+  return strncasecmp(a->fname, b->fname, FF_LFN_BUF);
 }
 
 bool FatFsDirCacheSorter::push(int16_t i) {
@@ -119,39 +86,49 @@ uint32_t FatFsDirCacheSorter::stackSize() {
   return _stack.size();
 }
 
-bool FatFsDirCacheSorter::quickSort(int16_t low, int16_t high) {
+bool FatFsDirCacheSorter::lampSort() {
   
-  if (!(push(low) && push(high))) return false;
+  int16_t low = 0;
+  int16_t high = _is->size() - 1;
+  
+  if (!(push(low, high))) return false;
   
   while(stackSize()) {
       
-    if (!(pop(&high) && pop(&low))) return false;
+    if (!pop(&low, &high)) return false;
     
-    // find the pivot element such that
-    // elements smaller than pivot are on left of pivot
-    // elements greater than pivot are on righ of pivot
-    int16_t pi = partition(low, high);
+    int16_t span = high - low;
     
-    DBG_PRINTF("FatFsDirCacheSorter: new partition index of %d\n", pi);    
-
-    if (pi < 0) {
-      DBG_PRINTF("FatFsDirCacheSorter: ERROR sorting (partition index of) %d\n", pi);    
-      return false;
-    }
+    if (span >= 2) {
       
-    // If there are elements on left side of pivot,
-    // then push left side to stack
-    if (pi - 1 > low) {
-      if (!(push(low) && push(pi - 1))) return false;
-    }
+      int16_t pi = low;
+      
+      FILINFO pivot;
+      
+      if (!read(high, &pivot)) return false;
 
-    // If there are elements on right side of pivot,
-    // then push right side to stack
-    if (pi + 1 < high) {
-      if (!(push(pi + 1) && push(high))) return false;
+      for (int16_t j = low; j < high; j++) {
+        
+        FILINFO jth;
+
+        if (!read(j, &jth)) return false;
+
+        if (compare(&jth, &pivot) < 0) swap(pi++, j);
+      }
+     
+      swap(pi, high);
+      
+      if (!(push(low, max(low, pi - 1)))) return false;
+      if (!(push(min(pi + 1, high), high))) return false;
+    }
+    else if (span == 1) {
+      
+      FILINFO low_info, high_info;
+      
+      if (!(read(low, &low_info) && read(high, &high_info))) return false;
+     
+      if (compare(&low_info, &high_info) > 0) swap(low, high);
     }
   }
-  
   return true;
 }
-

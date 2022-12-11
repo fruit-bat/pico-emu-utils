@@ -91,7 +91,7 @@ bool FatFsDirCacheInputStream::readCacheSize() {
 
 bool FatFsDirCacheInputStream::seek(uint32_t i) {
   if (_open) {
-    if (_i == 0) return true;
+    if (_i == i) return true;
     _i = i;
     uint32_t fi = i * FILINFO_SIZE;
     DBG_PRINTF("FatFsDirCacheInputStream: seek index %ld (position %ld)\n", i, fi);
