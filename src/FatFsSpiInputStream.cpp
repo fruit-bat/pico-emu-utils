@@ -1,6 +1,8 @@
 #include "FatFsSpiInputStream.h"
 #include <pico/printf.h>
-#define DEBUG_FAT_SPI
+
+// #define DEBUG_FAT_SPI
+
 #ifdef DEBUG_FAT_SPI
 #define DBG_PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -8,6 +10,11 @@
 #endif
 
 FatFsSpiInputStream::FatFsSpiInputStream(SdCardFatFsSpi* sdCard, const char* name) :
+  FatFsSpiInputStream(sdCard, name, (uint32_t)FA_READ|FA_OPEN_EXISTING)
+{
+}
+
+FatFsSpiInputStream::FatFsSpiInputStream(SdCardFatFsSpi* sdCard, const char* name, uint32_t mode) :
   _sdCard(sdCard),
   _eof(false),
   _open(false)
@@ -20,7 +27,7 @@ FatFsSpiInputStream::FatFsSpiInputStream(SdCardFatFsSpi* sdCard, const char* nam
   }
   
   DBG_PRINTF("openning file %s for read\n", name);
-  _fr = f_open(&_fil, name, FA_READ|FA_OPEN_EXISTING);
+  _fr = f_open(&_fil, name, mode);
   if (FR_OK != _fr && FR_EXIST != _fr) {
     DBG_PRINTF("f_open(%s) error: %s (%d)\n", name, FRESULT_str(_fr), _fr);
   }
@@ -95,3 +102,27 @@ uint32_t FatFsSpiInputStream::pos() {
   return f_tell(&_fil);
 }
 
+uint32_t FatFsSpiInputStream::size() {
+  if (!_open) return 0;
+  if (FR_OK != _fr) return 0;
+  return f_size(&_fil);
+}
+
+int32_t FatFsSpiInputStream::write(uint8_t* buffer, const uint32_t length) {
+  if (!_open) return -1;
+  
+  // TODO Handle errors with separate codes
+  if (FR_OK != _fr) return -1;
+
+  UINT bw = 0;
+  _fr = f_write(&_fil, buffer, length, &bw);
+  if (_fr != FR_OK) {
+    DBG_PRINTF("f_write(%s) error: (%d)\n", FRESULT_str(_fr), _fr);
+    return -2;
+  }
+  if (bw < length) {
+    DBG_PRINTF("f_write error: wrote %d of %ld\n", bw, length);
+    return -3; // failed to write
+  }
+  return bw;
+}
