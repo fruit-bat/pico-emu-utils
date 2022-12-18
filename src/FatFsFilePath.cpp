@@ -8,6 +8,8 @@
 #define DBG_PRINTF(...)
 #endif
 
+#include <iterator>
+
 FatFsFilePath::FatFsFilePath() 
 {
   
@@ -18,9 +20,9 @@ FatFsFilePath::~FatFsFilePath() {
 }
 
 void FatFsFilePath::appendTo(std::string &fname) {
-  for(auto e : _elements) {
-    fname.append("/");
-    fname.append(e);
+  for(auto it = _elements.begin(); it != _elements.end(); it++) {
+    fname.append(*it);
+    if (it != _elements.end()) fname.append("/");
   }
 }
 
