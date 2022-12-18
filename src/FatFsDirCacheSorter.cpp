@@ -68,6 +68,10 @@ void FatFsDirCacheSorter::swap(int16_t i, int16_t j) {
 }
 
 int FatFsDirCacheSorter::compare(FILINFO *a, FILINFO *b) {
+  bool da = a->fattrib & AM_DIR;
+  bool db = b->fattrib & AM_DIR;
+  if (da && !db) return -1;
+  if (!da && db) return 1;
   return strncasecmp(a->fname, b->fname, FF_LFN_BUF);
 }
 
@@ -118,8 +122,7 @@ bool FatFsDirCacheSorter::lampSort() {
      
       swap(pi, high);
       
-      if (!(push(low, max(low, pi - 1)))) return false;
-      if (!(push(min(pi + 1, high), high))) return false;
+      if (!(push(low, max(low, pi - 1)) && push(min(pi + 1, high), high))) return false;
     }
     else if (span == 1) {
       

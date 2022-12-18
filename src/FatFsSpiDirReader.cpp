@@ -2,6 +2,8 @@
 #include "FatFsSpiDirReader.h"
 #include "ff.h"
 
+#define DEBUG_FAT_SPI
+
 #ifdef DEBUG_FAT_SPI
 #define DBG_PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -25,7 +27,7 @@ bool FatFsSpiDirReader::foreach(std::function <bool(const FILINFO* info)> cb) {
 
   DIR dj;         /* Directory object */
   FILINFO fno;    /* File information */
-  FRESULT dfr = f_findfirst(&dj, &fno, _folder.c_str(), "*.*");
+  FRESULT dfr = f_findfirst(&dj, &fno, _folder.c_str(), "*");
 
   while (dfr == FR_OK && fno.fname[0]) {
     DBG_PRINTF("file %s\n", fno.fname);
