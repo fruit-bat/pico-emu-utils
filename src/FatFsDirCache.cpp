@@ -29,6 +29,7 @@ FatFsDirCache::~FatFsDirCache() {
 }
 
 bool FatFsDirCache::open() {
+  close();
   DBG_PRINTF("FatFsDirCache: opening cache in folder '%s'\n", _folder.c_str());
   _is.open(_folder.c_str(), ".dcache");
   return _is.isOpen();
@@ -41,6 +42,12 @@ void FatFsDirCache::close() {
 
 bool FatFsDirCache::read(uint32_t i, FILINFO* info) {
   return _is.read(i, info);
+}
+
+void FatFsDirCache::attach(FatFsFilePath *path) {
+  std::string fname;
+  path->appendTo(fname);
+  attach(fname.c_str());
 }
 
 void FatFsDirCache::attach(const char *folder) {

@@ -10,7 +10,26 @@
 
 #include <iterator>
 
-FatFsFilePath::FatFsFilePath() 
+FatFsFilePath::FatFsFilePath() :
+  _parent(0)
+{
+  
+}
+
+FatFsFilePath::FatFsFilePath(const char *root) :
+  _parent(0)
+{
+  push(root);
+}
+
+FatFsFilePath::FatFsFilePath(FatFsFilePath* parent, const char* folder) :
+  _parent(parent)
+{
+  push(folder);
+}
+
+FatFsFilePath::FatFsFilePath(FatFsFilePath* parent) :
+  _parent(parent)
 {
   
 }
@@ -20,17 +39,22 @@ FatFsFilePath::~FatFsFilePath() {
 }
 
 void FatFsFilePath::appendTo(std::string &fname) {
+  if (_parent) {
+    _parent->appendTo(fname);
+    fname.append("/");
+  }
+
   for(auto it = _elements.begin(); it != _elements.end(); it++) {
     fname.append(*it);
     if (it != _elements.end()) fname.append("/");
   }
 }
 
-void FatFsFilePath::push(char *e) {
+void FatFsFilePath::push(const char *e) {
   _elements.push_back(e);
 }
 
 void FatFsFilePath::pop() {
-  _elements.pop_back();
+  if (_elements.size()) _elements.pop_back();
 }
 
