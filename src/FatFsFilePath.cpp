@@ -9,11 +9,41 @@
 #endif
 
 #include <iterator>
+#include "ff.h"
 
 FatFsFilePath::FatFsFilePath() :
   _parent(0)
 {
+}
+
+bool FatFsFilePath::createFolders(SdCardFatFsSpi* sdCard, bool abs) {
   
+  if (!sdCard->mounted()) {
+    if (!sdCard->mount()) {
+      DBG_PRINTF("Failed to mount SD card\n");
+      return false;
+    }
+  }
+
+  if (_parent) {
+    if (!_parent->createFolders(sdCard)) return false;
+  }
+
+  std::string fname;
+  if (_parent) {
+    _parent->appendTo(fname);
+    fname.append("/");
+  }
+  else if (abs) fname.append("/");
+
+  for(auto it = _elements.begin(); it != _elements.end(); ) {
+    fname.append(*it);
+    DBG_PRINTF("Creating folder '%s'\n", fname.c_str());
+    f_mkdir(fname.c_str());
+    if (++it != _elements.end()) fname.append("/");
+  }
+  
+  return true;
 }
 
 FatFsFilePath::FatFsFilePath(const char *root) :
@@ -38,15 +68,16 @@ FatFsFilePath::~FatFsFilePath() {
   
 }
 
-void FatFsFilePath::appendTo(std::string &fname) {
+void FatFsFilePath::appendTo(std::string &fname, bool abs) {
   if (_parent) {
     _parent->appendTo(fname);
     fname.append("/");
   }
+  else if (abs) fname.append("/");
 
-  for(auto it = _elements.begin(); it != _elements.end(); it++) {
+  for(auto it = _elements.begin(); it != _elements.end(); ) {
     fname.append(*it);
-    if (it != _elements.end()) fname.append("/");
+    if (++it != _elements.end()) fname.append("/");
   }
 }
 
@@ -58,3 +89,8 @@ void FatFsFilePath::pop() {
   if (_elements.size()) _elements.pop_back();
 }
 
+bool FatFsFilePath::equals(const char *p) {
+  std::string fp;
+  appendTo(fp);
+  return fp == p;
+}
