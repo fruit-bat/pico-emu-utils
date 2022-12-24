@@ -2,7 +2,7 @@
 #include "FatFsSpiDirReader.h"
 #include "ff.h"
 
-#define DEBUG_FAT_SPI
+// #define DEBUG_FAT_SPI
 
 #ifdef DEBUG_FAT_SPI
 #define DBG_PRINTF(...) printf(__VA_ARGS__)
@@ -19,18 +19,18 @@ FatFsSpiDirReader::FatFsSpiDirReader(SdCardFatFsSpi* sdCard, const char *folder)
 bool FatFsSpiDirReader::foreach(std::function <bool(const FILINFO* info)> cb) {
   if (!_sdCard->mounted()) {   
     if (!_sdCard->mount()) {
-      DBG_PRINTF("Failed to mount SD card\n");
+      DBG_PRINTF("FatFsSpiDirReader: Failed to mount SD card\n");
       return false;
     }
   }
-  DBG_PRINTF("reading folder %s\n", _folder.c_str());
+  DBG_PRINTF("FatFsSpiDirReader: reading folder %s\n", _folder.c_str());
 
   DIR dj;         /* Directory object */
   FILINFO fno;    /* File information */
   FRESULT dfr = f_findfirst(&dj, &fno, _folder.c_str(), "*");
 
   while (dfr == FR_OK && fno.fname[0]) {
-    DBG_PRINTF("file %s\n", fno.fname);
+    DBG_PRINTF("FatFsSpiDirReader: file %s\n", fno.fname);
     if (!cb(&fno)) {
       f_closedir(&dj);
       return false;

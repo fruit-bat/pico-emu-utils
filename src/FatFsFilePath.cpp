@@ -1,6 +1,6 @@
 #include "FatFsFilePath.h"
 
-#define DEBUG_FAT_SPI
+// #define DEBUG_FAT_SPI
 
 #ifdef DEBUG_FAT_SPI
 #define DBG_PRINTF(...) printf(__VA_ARGS__)
@@ -16,11 +16,11 @@ FatFsFilePath::FatFsFilePath() :
 {
 }
 
-bool FatFsFilePath::createFolders(SdCardFatFsSpi* sdCard, bool abs) {
+bool FatFsFilePath::createFolders(SdCardFatFsSpi* sdCard) {
   
   if (!sdCard->mounted()) {
     if (!sdCard->mount()) {
-      DBG_PRINTF("Failed to mount SD card\n");
+      DBG_PRINTF("FatFsFilePath: Failed to mount SD card\n");
       return false;
     }
   }
@@ -34,13 +34,12 @@ bool FatFsFilePath::createFolders(SdCardFatFsSpi* sdCard, bool abs) {
     _parent->appendTo(fname);
     fname.append("/");
   }
-  else if (abs) fname.append("/");
 
   for(auto it = _elements.begin(); it != _elements.end(); ) {
-    fname.append(*it);
-    DBG_PRINTF("Creating folder '%s'\n", fname.c_str());
+    fname.append(*it++);
+    DBG_PRINTF("FatFsFilePath: Creating folder '%s'\n", fname.c_str());
     f_mkdir(fname.c_str());
-    if (++it != _elements.end()) fname.append("/");
+    if (it != _elements.end()) fname.append("/");
   }
   
   return true;
@@ -68,16 +67,15 @@ FatFsFilePath::~FatFsFilePath() {
   
 }
 
-void FatFsFilePath::appendTo(std::string &fname, bool abs) {
+void FatFsFilePath::appendTo(std::string &fname) {
   if (_parent) {
     _parent->appendTo(fname);
     fname.append("/");
   }
-  else if (abs) fname.append("/");
 
   for(auto it = _elements.begin(); it != _elements.end(); ) {
-    fname.append(*it);
-    if (++it != _elements.end()) fname.append("/");
+    fname.append(*it++);
+    if (it != _elements.end()) fname.append("/");
   }
 }
 

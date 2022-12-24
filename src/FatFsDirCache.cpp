@@ -4,9 +4,9 @@
 #include "FatFsSpiInputStream.h"
 #include "FatFsDirCacheSorter.h"
 
-// #define DEBUG_FAT_SPI
+// #define DEBUG_DIR_CACHE
 
-#ifdef DEBUG_FAT_SPI
+#ifdef DEBUG_DIR_CACHE
 #define DBG_PRINTF(...) printf(__VA_ARGS__)
 #else
 #define DBG_PRINTF(...)

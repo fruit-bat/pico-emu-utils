@@ -15,10 +15,10 @@ public:
   FatFsFilePath(FatFsFilePath* parent, const char* folder);
   ~FatFsFilePath();
   
-  void appendTo(std::string &fname, bool abs = true);
+  void appendTo(std::string &fname);
   void push(const char *e);
   void pop();
-  bool createFolders(SdCardFatFsSpi* sdCard, bool abs = true);
+  bool createFolders(SdCardFatFsSpi* sdCard);
   uint32_t size() { return _elements.size(); }
   bool equals(const char *p);
 };
