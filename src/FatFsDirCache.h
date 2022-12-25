@@ -6,6 +6,7 @@
 #include "SdCardFatFsSpi.h"
 #include "FatFsDirCacheInputStream.h"
 #include "FatFsDirCacheOutputStream.h"
+#include "FatFsFilePath.h"
 
 class FatFsDirCache {
 private:
@@ -20,6 +21,7 @@ public:
   FatFsDirCache(SdCardFatFsSpi* sdCard);
   ~FatFsDirCache();
   void attach(const char *folder);
+  void attach(FatFsFilePath *path);
   void filter(std::function<bool(const char *fname)> filter);
   bool create();
   void remove(const char *name);

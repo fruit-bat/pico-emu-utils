@@ -4,9 +4,9 @@
 #include "FatFsSpiInputStream.h"
 #include "FatFsDirCacheSorter.h"
 
-// #define DEBUG_FAT_SPI
+// #define DEBUG_DIR_CACHE
 
-#ifdef DEBUG_FAT_SPI
+#ifdef DEBUG_DIR_CACHE
 #define DBG_PRINTF(...) printf(__VA_ARGS__)
 #else
 #define DBG_PRINTF(...)
@@ -29,6 +29,7 @@ FatFsDirCache::~FatFsDirCache() {
 }
 
 bool FatFsDirCache::open() {
+  close();
   DBG_PRINTF("FatFsDirCache: opening cache in folder '%s'\n", _folder.c_str());
   _is.open(_folder.c_str(), ".dcache");
   return _is.isOpen();
@@ -41,6 +42,12 @@ void FatFsDirCache::close() {
 
 bool FatFsDirCache::read(uint32_t i, FILINFO* info) {
   return _is.read(i, info);
+}
+
+void FatFsDirCache::attach(FatFsFilePath *path) {
+  std::string fname;
+  path->appendTo(fname);
+  attach(fname.c_str());
 }
 
 void FatFsDirCache::attach(const char *folder) {

@@ -2,7 +2,7 @@
 #include <pico/printf.h>
 #include <string>
 
-#ifdef DEBUG_FAT_
+#ifdef DEBUG_FAT_OS
 #define DBG_PRINTF(...) printf(__VA_ARGS__)
 #else
 #define DBG_PRINTF(...)
@@ -19,7 +19,7 @@ void FatFsSpiOutputStream::open(const char* name) {
   DBG_PRINTF("openning file %s for write \n", name);
   _fr = f_open(&_fil, name, FA_WRITE|FA_OPEN_ALWAYS);
   if (FR_OK != _fr && FR_EXIST != _fr) {
-    printf("f_open(%s) error: %s (%d)\n", name, FRESULT_str(_fr), _fr);
+    DBG_PRINTF("f_open(%s) error: %s (%d)\n", name, FRESULT_str(_fr), _fr);
   }
   else {
     DBG_PRINTF("openned file %s ok!\n", name);
