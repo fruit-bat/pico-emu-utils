@@ -122,6 +122,12 @@ void FatFsDirCache::remove(const char *name) {
 }
 
 void FatFsDirCache::reload() {
+  if (!_sdCard->mounted()) {   
+    if (!_sdCard->mount()) {
+      DBG_PRINTF("FatFsDirCache: failed to mount SD card\n");
+      return;
+    }
+  }  
   close();
   remove(".dcache");
   create();

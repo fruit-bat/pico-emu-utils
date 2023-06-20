@@ -43,7 +43,7 @@
  extern "C" {
 #endif
 
-#define HID_MAX_JOYSTICKS 4
+#define HID_MAX_JOYSTICKS 2
 
 typedef union TU_ATTR_PACKED
 {
