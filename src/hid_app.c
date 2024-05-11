@@ -149,6 +149,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
             process_kbd_mount(dev_addr, instance);
             break;
           }
+          case HID_USAGE_DESKTOP_GAMEPAD:
           case HID_USAGE_DESKTOP_JOYSTICK: {
             printf("HID receive joystick report description dev_addr=%d instance=%d\r\n", dev_addr, instance);
             if(tuh_hid_allocate_info(dev_addr, instance, has_report_id, &handle_joystick_report, handle_joystick_unmount)) {
@@ -161,12 +162,14 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
             tuh_hid_allocate_info(dev_addr, instance, has_report_id, &handle_mouse_report, NULL);
             break;
           }
+#if 0
           case HID_USAGE_DESKTOP_GAMEPAD: {
             printf("HID receive gamepad report description dev_addr=%d instance=%d\r\n", dev_addr, instance);
             tuh_hid_allocate_info(dev_addr, instance, has_report_id, &handle_gamepad_report, NULL);
             // May be able to handle this in the same was as a the joystick. Needs a little investigation
             break;
           }
+#endif
           default: {
             TU_LOG1("HID usage unknown usage:%d\r\n", report->usage);
             break;
