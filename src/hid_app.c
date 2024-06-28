@@ -191,7 +191,12 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
      tuh_hid_allocate_info(dev_addr, instance, false, handle_kbd_report, handle_keyboard_unmount);
      process_kbd_mount(dev_addr, instance);
   }
-
+  else if ( itf_protocol == HID_ITF_PROTOCOL_MOUSE )
+  {
+     tuh_hid_allocate_info(dev_addr, instance, false, handle_mouse_report, handle_mouse_unmount);
+     process_mouse_mount(dev_addr, instance);
+  }
+  
   // request to receive report
   // tuh_hid_report_received_cb() will be invoked when report is available
   if ( !tuh_hid_receive_report(dev_addr, instance) )
