@@ -41,8 +41,10 @@
 void process_kbd_report(hid_keyboard_report_t const *report, hid_keyboard_report_t const *prev_report);
 void process_kbd_mount(uint8_t dev_addr, uint8_t instance);
 void process_kbd_unmount(uint8_t dev_addr, uint8_t instance);
+void process_mouse_mount(uint8_t dev_addr, uint8_t instance);
+void process_mouse_unmount(uint8_t dev_addr, uint8_t instance);
+void process_mouse_report(hid_mouse_report_t const * report);
 
-static void process_mouse_report(hid_mouse_report_t const * report);
 static void process_generic_report(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len);
 
 //--------------------------------------------------------------------+
@@ -66,6 +68,11 @@ void handle_keyboard_unmount(tusb_hid_host_info_t* info) {
   TU_LOG1("HID keyboard unmount\n");
   // Free up keybouard definitions
   process_kbd_unmount(info->key.elements.dev_addr, info->key.elements.instance);
+}
+
+void handle_mouse_unmount(tusb_hid_host_info_t* info) {
+  TU_LOG1("HID mouse unmount\n");
+  process_mouse_unmount(info->key.elements.dev_addr, info->key.elements.instance);
 }
 
 void __not_in_flash_func(handle_mouse_report)(tusb_hid_host_info_t* info, const uint8_t* report, uint8_t report_length, uint8_t report_id)
@@ -159,7 +166,8 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
           }
           case HID_USAGE_DESKTOP_MOUSE: {
             printf("HID receive mouse report description dev_addr=%d instance=%d\r\n", dev_addr, instance);
-            tuh_hid_allocate_info(dev_addr, instance, has_report_id, &handle_mouse_report, NULL);
+            tuh_hid_allocate_info(dev_addr, instance, has_report_id, &handle_mouse_report, handle_mouse_unmount);
+            process_mouse_mount(dev_addr, instance);
             break;
           }
 #if 0
@@ -235,6 +243,7 @@ void __not_in_flash_func(tuh_hid_report_received_cb)(uint8_t dev_addr, uint8_t i
 //--------------------------------------------------------------------+
 // Mouse
 //--------------------------------------------------------------------+
+#if 0
 
 void __not_in_flash_func(cursor_movement)(int8_t x, int8_t y, int8_t wheel)
 {
@@ -271,7 +280,6 @@ void __not_in_flash_func(cursor_movement)(int8_t x, int8_t y, int8_t wheel)
   printf("(%d %d %d)\r\n", x, y, wheel);
 #endif
 }
-
 static void process_mouse_report(hid_mouse_report_t const * report)
 {
   static hid_mouse_report_t prev_report = { 0 };
@@ -289,7 +297,7 @@ static void process_mouse_report(hid_mouse_report_t const * report)
   //------------- cursor movement -------------//
   cursor_movement(report->x, report->y, report->wheel);
 }
-
+#endif
 //--------------------------------------------------------------------+
 // Generic Report
 //--------------------------------------------------------------------+
