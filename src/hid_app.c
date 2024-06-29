@@ -46,7 +46,6 @@ void process_mouse_unmount(uint8_t dev_addr, uint8_t instance);
 void process_mouse_report(hid_mouse_report_t const * report);
 
 static void process_generic_report(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len);
-
 //--------------------------------------------------------------------+
 // Keyboard
 //--------------------------------------------------------------------+
@@ -134,7 +133,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 
   // By default host stack will use activate boot protocol on supported interface.
   // Therefore for this simple example, we only need to parse generic report descriptor (with built-in parser)
-  if ( itf_protocol == HID_ITF_PROTOCOL_NONE )
+  if ( itf_protocol == HID_ITF_PROTOCOL_NONE || itf_protocol == HID_USAGE_DESKTOP_MOUSE)
   {
     tuh_hid_report_info_t reports[MAX_REPORT];
     uint8_t report_count = tuh_hid_parse_report_descriptor(reports, MAX_REPORT, desc_report, desc_len);
@@ -193,8 +192,8 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
   }
   else if ( itf_protocol == HID_ITF_PROTOCOL_MOUSE )
   {
-     tuh_hid_allocate_info(dev_addr, instance, false, handle_mouse_report, handle_mouse_unmount);
-     process_mouse_mount(dev_addr, instance);
+    tuh_hid_allocate_info(dev_addr, instance, false, handle_mouse_report, handle_mouse_unmount);
+    process_mouse_mount(dev_addr, instance);
   }
   
   // request to receive report
@@ -221,15 +220,15 @@ void __not_in_flash_func(tuh_hid_report_received_cb)(uint8_t dev_addr, uint8_t i
 
   switch (itf_protocol)
   {
-    case HID_ITF_PROTOCOL_KEYBOARD:
-      TU_LOG2("HID receive boot keyboard report\r\n");
-      _process_kbd_report((hid_keyboard_report_t*)report);
-    break;
+    // case HID_ITF_PROTOCOL_KEYBOARD:
+    //   TU_LOG2("HID receive boot keyboard report\r\n");
+    //   _process_kbd_report((hid_keyboard_report_t*)report);
+    // break;
 
-    case HID_ITF_PROTOCOL_MOUSE:
-      TU_LOG2("HID receive boot mouse report\r\n");
-      process_mouse_report( (hid_mouse_report_t const*) report );
-    break;
+    // case HID_ITF_PROTOCOL_MOUSE:
+    //   TU_LOG2("HID receive boot mouse report\r\n");
+    //   process_mouse_report( (hid_mouse_report_t const*) report );
+    // break;
 
     default:
       TU_LOG2("HID receive boot generic report\r\n");
