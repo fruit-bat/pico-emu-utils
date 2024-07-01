@@ -83,13 +83,13 @@ void __not_in_flash_func(handle_mouse_report)(tusb_hid_host_info_t* info, const 
 void __not_in_flash_func(handle_joystick_report)(tusb_hid_host_info_t* info, const uint8_t* report, uint8_t report_length, uint8_t report_id)
 { 
   TU_LOG1("HID receive joystick report\r\n");
-  tusb_hid_simple_joysick_t* simple_joystick = tuh_hid_get_simple_joystick(
+  tusb_hid_simple_joystick_t* simple_joystick = tuh_hid_get_simple_joystick(
     info->key.elements.dev_addr, 
     info->key.elements.instance, 
     report_id);
     
   if (simple_joystick != NULL) {
-    tusb_hid_simple_joysick_process_report(simple_joystick, report, report_length);
+    tusb_hid_simple_joystick_process_report(simple_joystick, report, report_length);
   }
 }
 
