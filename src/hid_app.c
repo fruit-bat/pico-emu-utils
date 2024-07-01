@@ -26,8 +26,12 @@
 #include "bsp/board.h"
 #include "tusb.h"
 #include "hid_host_joy.h"
+#include "hid_host_mouse.h"
 #include "hid_host_info.h"
 
+
+#define TU_LOG1 printf
+#define TU_LOG2 printf
 //--------------------------------------------------------------------+
 // MACRO TYPEDEF CONSTANT ENUM DECLARATION
 //--------------------------------------------------------------------+
@@ -71,13 +75,29 @@ void handle_keyboard_unmount(tusb_hid_host_info_t* info) {
 
 void handle_mouse_unmount(tusb_hid_host_info_t* info) {
   TU_LOG1("HID mouse unmount\n");
+  // Free up mouse definitions
+  tuh_hid_free_simple_mice_for_instance(info->key.elements.dev_addr, info->key.elements.instance);
+
   process_mouse_unmount(info->key.elements.dev_addr, info->key.elements.instance);
 }
 
 void __not_in_flash_func(handle_mouse_report)(tusb_hid_host_info_t* info, const uint8_t* report, uint8_t report_length, uint8_t report_id)
 {
   TU_LOG1("HID receive mouse report\r\n");
-  process_mouse_report((hid_mouse_report_t const *)report);
+  tusb_hid_simple_mouse_t* simple_mouse = tuh_hid_get_simple_mouse(
+    info->key.elements.dev_addr, 
+    info->key.elements.instance, 
+    report_id);
+    
+  if (simple_mouse != NULL) {
+    tusb_hid_simple_mouse_process_report(simple_mouse, report, report_length);
+    hid_mouse_report_t report;
+    report.x = simple_mouse->values.x1;
+    report.y = simple_mouse->values.y1;
+    report.wheel = simple_mouse->values.w1;
+    report.buttons = simple_mouse->values.buttons;
+    process_mouse_report(&report);
+  }
 }
 
 void __not_in_flash_func(handle_joystick_report)(tusb_hid_host_info_t* info, const uint8_t* report, uint8_t report_length, uint8_t report_id)
@@ -165,8 +185,10 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
           }
           case HID_USAGE_DESKTOP_MOUSE: {
             printf("HID receive mouse report description dev_addr=%d instance=%d\r\n", dev_addr, instance);
-            tuh_hid_allocate_info(dev_addr, instance, has_report_id, &handle_mouse_report, handle_mouse_unmount);
-            process_mouse_mount(dev_addr, instance);
+            if(tuh_hid_allocate_info(dev_addr, instance, has_report_id, &handle_mouse_report, handle_mouse_unmount)) {
+              tuh_hid_mouse_parse_report_descriptor(desc_report, desc_len, dev_addr, instance);
+              process_mouse_mount(dev_addr, instance);
+            }
             break;
           }
 #if 0
@@ -231,7 +253,7 @@ void __not_in_flash_func(tuh_hid_report_received_cb)(uint8_t dev_addr, uint8_t i
     // break;
 
     default:
-      TU_LOG2("HID receive boot generic report\r\n");
+      TU_LOG2("HID receive generic report\r\n");
       // Generic report requires matching ReportID and contents with previous parsed report info
       process_generic_report(dev_addr, instance, report, len);
     break;

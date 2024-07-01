@@ -28,6 +28,9 @@
 #include "hid_host_utils.h"
 #include "bsp/board.h"
 
+#define TU_LOG1 printf
+#define TU_LOG2 printf
+
 static tusb_hid_simple_joystick_t hid_simple_joysticks[HID_MAX_JOYSTICKS];
 
 static bool tuh_hid_joystick_check_usage(uint32_t eusage)
@@ -214,6 +217,8 @@ void tusb_hid_simple_joystick_process_report(tusb_hid_simple_joystick_t* simple_
   values->buttons = tuh_hid_report_bits_u32(report, simple_joystick->buttons.start, simple_joystick->buttons.length);
   simple_joystick->has_values = true;
   simple_joystick->updated = board_millis();
+
+  tusb_hid_print_simple_joystick_report(simple_joystick);
 }
 
 void tusb_hid_print_simple_joystick_report(tusb_hid_simple_joystick_t* simple_joystick)

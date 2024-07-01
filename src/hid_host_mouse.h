@@ -44,6 +44,11 @@ typedef struct {
   uint32_t updated;
 } tusb_hid_simple_mouse_t;
 
+void tuh_hid_mouse_parse_report_descriptor(uint8_t const* desc_report, uint16_t desc_len, uint8_t dev_addr, uint8_t instance);
+tusb_hid_simple_mouse_t* tuh_hid_get_simple_mouse(uint8_t dev_addr, uint8_t instance, uint8_t report_id);
+void tusb_hid_simple_mouse_process_report(tusb_hid_simple_mouse_t* simple_mouse, const uint8_t* report, uint8_t report_length);
+void tuh_hid_free_simple_mice_for_instance(uint8_t dev_addr, uint8_t instance);
+
 #ifdef __cplusplus
 }
 #endif
