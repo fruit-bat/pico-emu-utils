@@ -26,6 +26,7 @@
 #include "bsp/board.h"
 #include "tusb.h"
 #include "hid_host_joy.h"
+#include "hid_host_mouse.h"
 #include "hid_host_info.h"
 
 //--------------------------------------------------------------------+
@@ -41,10 +42,11 @@
 void process_kbd_report(hid_keyboard_report_t const *report, hid_keyboard_report_t const *prev_report);
 void process_kbd_mount(uint8_t dev_addr, uint8_t instance);
 void process_kbd_unmount(uint8_t dev_addr, uint8_t instance);
+void process_mouse_mount(uint8_t dev_addr, uint8_t instance);
+void process_mouse_unmount(uint8_t dev_addr, uint8_t instance);
+void process_mouse_report(hid_mouse_report_t const * report);
 
-static void process_mouse_report(hid_mouse_report_t const * report);
 static void process_generic_report(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len);
-
 //--------------------------------------------------------------------+
 // Keyboard
 //--------------------------------------------------------------------+
@@ -68,22 +70,43 @@ void handle_keyboard_unmount(tusb_hid_host_info_t* info) {
   process_kbd_unmount(info->key.elements.dev_addr, info->key.elements.instance);
 }
 
+void handle_mouse_unmount(tusb_hid_host_info_t* info) {
+  TU_LOG1("HID mouse unmount\n");
+  // Free up mouse definitions
+  tuh_hid_free_simple_mice_for_instance(info->key.elements.dev_addr, info->key.elements.instance);
+
+  process_mouse_unmount(info->key.elements.dev_addr, info->key.elements.instance);
+}
+
 void __not_in_flash_func(handle_mouse_report)(tusb_hid_host_info_t* info, const uint8_t* report, uint8_t report_length, uint8_t report_id)
 {
   TU_LOG1("HID receive mouse report\r\n");
-  process_mouse_report((hid_mouse_report_t const *)report);
+  tusb_hid_simple_mouse_t* simple_mouse = tuh_hid_get_simple_mouse(
+    info->key.elements.dev_addr, 
+    info->key.elements.instance, 
+    report_id);
+    
+  if (simple_mouse != NULL) {
+    tusb_hid_simple_mouse_process_report(simple_mouse, report, report_length);
+    hid_mouse_report_t report;
+    report.x = simple_mouse->values.x1;
+    report.y = simple_mouse->values.y1;
+    report.wheel = simple_mouse->values.w1;
+    report.buttons = simple_mouse->values.buttons;
+    process_mouse_report(&report);
+  }
 }
 
 void __not_in_flash_func(handle_joystick_report)(tusb_hid_host_info_t* info, const uint8_t* report, uint8_t report_length, uint8_t report_id)
 { 
   TU_LOG1("HID receive joystick report\r\n");
-  tusb_hid_simple_joysick_t* simple_joystick = tuh_hid_get_simple_joystick(
+  tusb_hid_simple_joystick_t* simple_joystick = tuh_hid_get_simple_joystick(
     info->key.elements.dev_addr, 
     info->key.elements.instance, 
     report_id);
     
   if (simple_joystick != NULL) {
-    tusb_hid_simple_joysick_process_report(simple_joystick, report, report_length);
+    tusb_hid_simple_joystick_process_report(simple_joystick, report, report_length);
   }
 }
 
@@ -127,7 +150,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 
   // By default host stack will use activate boot protocol on supported interface.
   // Therefore for this simple example, we only need to parse generic report descriptor (with built-in parser)
-  if ( itf_protocol == HID_ITF_PROTOCOL_NONE )
+  if ( itf_protocol == HID_ITF_PROTOCOL_NONE || itf_protocol == HID_USAGE_DESKTOP_MOUSE)
   {
     tuh_hid_report_info_t reports[MAX_REPORT];
     uint8_t report_count = tuh_hid_parse_report_descriptor(reports, MAX_REPORT, desc_report, desc_len);
@@ -159,7 +182,10 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
           }
           case HID_USAGE_DESKTOP_MOUSE: {
             printf("HID receive mouse report description dev_addr=%d instance=%d\r\n", dev_addr, instance);
-            tuh_hid_allocate_info(dev_addr, instance, has_report_id, &handle_mouse_report, NULL);
+            if(tuh_hid_allocate_info(dev_addr, instance, has_report_id, &handle_mouse_report, handle_mouse_unmount)) {
+              tuh_hid_mouse_parse_report_descriptor(desc_report, desc_len, dev_addr, instance);
+              process_mouse_mount(dev_addr, instance);
+            }
             break;
           }
 #if 0
@@ -183,7 +209,12 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
      tuh_hid_allocate_info(dev_addr, instance, false, handle_kbd_report, handle_keyboard_unmount);
      process_kbd_mount(dev_addr, instance);
   }
-
+  else if ( itf_protocol == HID_ITF_PROTOCOL_MOUSE )
+  {
+    tuh_hid_allocate_info(dev_addr, instance, false, handle_mouse_report, handle_mouse_unmount);
+    process_mouse_mount(dev_addr, instance);
+  }
+  
   // request to receive report
   // tuh_hid_report_received_cb() will be invoked when report is available
   if ( !tuh_hid_receive_report(dev_addr, instance) )
@@ -208,18 +239,18 @@ void __not_in_flash_func(tuh_hid_report_received_cb)(uint8_t dev_addr, uint8_t i
 
   switch (itf_protocol)
   {
-    case HID_ITF_PROTOCOL_KEYBOARD:
-      TU_LOG2("HID receive boot keyboard report\r\n");
-      _process_kbd_report((hid_keyboard_report_t*)report);
-    break;
+    // case HID_ITF_PROTOCOL_KEYBOARD:
+    //   TU_LOG2("HID receive boot keyboard report\r\n");
+    //   _process_kbd_report((hid_keyboard_report_t*)report);
+    // break;
 
-    case HID_ITF_PROTOCOL_MOUSE:
-      TU_LOG2("HID receive boot mouse report\r\n");
-      process_mouse_report( (hid_mouse_report_t const*) report );
-    break;
+    // case HID_ITF_PROTOCOL_MOUSE:
+    //   TU_LOG2("HID receive boot mouse report\r\n");
+    //   process_mouse_report( (hid_mouse_report_t const*) report );
+    // break;
 
     default:
-      TU_LOG2("HID receive boot generic report\r\n");
+      TU_LOG2("HID receive generic report\r\n");
       // Generic report requires matching ReportID and contents with previous parsed report info
       process_generic_report(dev_addr, instance, report, len);
     break;
@@ -230,64 +261,6 @@ void __not_in_flash_func(tuh_hid_report_received_cb)(uint8_t dev_addr, uint8_t i
   {
     printf("Error: cannot request to receive report\r\n");
   }
-}
-
-//--------------------------------------------------------------------+
-// Mouse
-//--------------------------------------------------------------------+
-
-void __not_in_flash_func(cursor_movement)(int8_t x, int8_t y, int8_t wheel)
-{
-#if USE_ANSI_ESCAPE
-  // Move X using ansi escape
-  if ( x < 0)
-  {
-    printf(ANSI_CURSOR_BACKWARD(%d), (-x)); // move left
-  }else if ( x > 0)
-  {
-    printf(ANSI_CURSOR_FORWARD(%d), x); // move right
-  }
-
-  // Move Y using ansi escape
-  if ( y < 0)
-  {
-    printf(ANSI_CURSOR_UP(%d), (-y)); // move up
-  }else if ( y > 0)
-  {
-    printf(ANSI_CURSOR_DOWN(%d), y); // move down
-  }
-
-  // Scroll using ansi escape
-  if (wheel < 0)
-  {
-    printf(ANSI_SCROLL_UP(%d), (-wheel)); // scroll up
-  }else if (wheel > 0)
-  {
-    printf(ANSI_SCROLL_DOWN(%d), wheel); // scroll down
-  }
-
-  printf("\r\n");
-#else
-  printf("(%d %d %d)\r\n", x, y, wheel);
-#endif
-}
-
-static void process_mouse_report(hid_mouse_report_t const * report)
-{
-  static hid_mouse_report_t prev_report = { 0 };
-
-  //------------- button state  -------------//
-  uint8_t button_changed_mask = report->buttons ^ prev_report.buttons;
-  if ( button_changed_mask & report->buttons)
-  {
-    printf(" %c%c%c ",
-       report->buttons & MOUSE_BUTTON_LEFT   ? 'L' : '-',
-       report->buttons & MOUSE_BUTTON_MIDDLE ? 'M' : '-',
-       report->buttons & MOUSE_BUTTON_RIGHT  ? 'R' : '-');
-  }
-
-  //------------- cursor movement -------------//
-  cursor_movement(report->x, report->y, report->wheel);
 }
 
 //--------------------------------------------------------------------+
