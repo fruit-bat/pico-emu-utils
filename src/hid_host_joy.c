@@ -82,6 +82,7 @@ tusb_hid_simple_joystick_t* tuh_hid_allocate_simple_joystick(uint8_t dev_addr, u
       tuh_hid_simple_init_axis(&simple_joystick->axis_x2);
       tuh_hid_simple_init_axis(&simple_joystick->axis_y1);
       tuh_hid_simple_init_axis(&simple_joystick->axis_y2);
+      tuh_hid_simple_init_axis(&simple_joystick->hat);
       return simple_joystick;
     }
   }
