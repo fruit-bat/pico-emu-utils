@@ -38,9 +38,9 @@ bool tuh_hid_get_simple_input_data(
   data->logical_min = ri_logical_min ? tuh_hid_ri_short_data32(ri_logical_min) : 0;
   data->logical_max = ri_logical_max ? tuh_hid_ri_short_data32(ri_logical_max) : 0;
   data->input_flags.byte = tuh_hid_ri_short_udata8(ri_input);
-  data->usage_page = tuh_hid_ri_short_udata32(ri_usage_page);
-  data->usage_min = ri_usage_min ? tuh_hid_ri_short_udata32(ri_usage_min) : 0;
-  data->usage_max = ri_usage_max ? tuh_hid_ri_short_udata32(ri_usage_max) : 0;
+  data->usage_page = (uint16_t)tuh_hid_ri_short_udata32(ri_usage_page);
+  data->usage_min = ri_usage_min ? (uint16_t)tuh_hid_ri_short_udata32(ri_usage_min) : 0;
+  data->usage_max = ri_usage_max ? (uint16_t)tuh_hid_ri_short_udata32(ri_usage_max) : 0;
   data->usage_is_range = (ri_usage_min != NULL) && (ri_usage_max != NULL);
   
   return true;
@@ -51,8 +51,8 @@ void tuh_hid_process_simple_axis(
   uint32_t bitpos,
   tusb_hid_simple_axis_t* simple_axis)
 {
-  simple_axis->start = bitpos;
-  simple_axis->length = jdata->report_size;
+  simple_axis->start = (uint16_t)bitpos;
+  simple_axis->length = (uint16_t)jdata->report_size;
   simple_axis->flags.is_signed = jdata->logical_min < 0;
   simple_axis->logical_min = jdata->logical_min;
   simple_axis->logical_max = jdata->logical_max;

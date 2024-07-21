@@ -102,7 +102,8 @@ void FatFsDirCache::remove(const char *name) {
   
   std::string cname;
   cname.append(_folder);
-  cname.append("/");
+  // TODO Check for trailing /
+  // TODO cname.append("/");
   cname.append(name);  
     
   const char* cp = cname.c_str();

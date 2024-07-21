@@ -75,7 +75,6 @@ tusb_hid_host_info_t* tuh_hid_allocate_info(
   void (*handler)(struct tusb_hid_host_info* info, const uint8_t* report, uint8_t report_length, uint8_t report_id),
   void (*unmount)(struct tusb_hid_host_info* info))
 {
-  printf("TUP_DCD_ENDPOINT_MAX %d\n", TUP_DCD_ENDPOINT_MAX);
   for(uint8_t i = 0; i < TUP_DCD_ENDPOINT_MAX; ++i) {
     tusb_hid_host_info_t* info = &hid_info[i];
     if (!info->key.elements.in_use) {

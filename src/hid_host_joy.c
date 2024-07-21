@@ -125,8 +125,8 @@ void tuh_hid_joystick_process_usages(
   if (jdata->usage_is_range) {
     if (jdata->usage_page == HID_USAGE_PAGE_BUTTON) {
       tusb_hid_simple_buttons_t* simple_buttons = &simple_joystick->buttons;
-      simple_buttons->start = bitpos;
-      simple_buttons->length = jdata->report_count;
+      simple_buttons->start = (uint16_t)bitpos;
+      simple_buttons->length = (uint16_t)jdata->report_count;
       return;
     }
   }

@@ -97,8 +97,8 @@ void tuh_hid_mouse_process_usages(
   if (jdata->usage_is_range) {
     if (jdata->usage_page == HID_USAGE_PAGE_BUTTON) {
       tusb_hid_simple_buttons_t* simple_buttons = &simple_mouse->buttons;
-      simple_buttons->start = bitpos;
-      simple_buttons->length = jdata->report_count;
+      simple_buttons->start = (uint16_t)bitpos;
+      simple_buttons->length = (uint16_t)jdata->report_count;
       return;
     }
   }
@@ -180,6 +180,8 @@ void tusb_hid_simple_mouse_process_report(tusb_hid_simple_mouse_t* simple_mouse,
   values->buttons = tuh_hid_report_bits_u32(report, simple_mouse->buttons.start, simple_mouse->buttons.length);
   simple_mouse->has_values = true;
   simple_mouse->updated = board_millis();
+
+   // tusb_hid_print_simple_mouse_report(simple_mouse);
 }
 
 void tusb_hid_print_simple_mouse_report(tusb_hid_simple_mouse_t* simple_mouse)
