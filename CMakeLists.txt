@@ -25,6 +25,7 @@ target_sources(pico_emu_utils INTERFACE
 	${CMAKE_CURRENT_LIST_DIR}/src/FatFsDirCacheOutputStream.cpp
 	${CMAKE_CURRENT_LIST_DIR}/src/FatFsDirCache.cpp
 	${CMAKE_CURRENT_LIST_DIR}/src/FatFsDirCacheSorter.cpp
+	${CMAKE_CURRENT_LIST_DIR}/src/xinput_host.c
 )
 
 target_include_directories(pico_emu_utils INTERFACE
