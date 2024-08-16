@@ -48,7 +48,7 @@ void process_mouse_report(hid_mouse_report_t const * report);
 
 static void process_generic_report(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len);
 //--------------------------------------------------------------------+
-// Keyboard
+// HID Keyboard
 //--------------------------------------------------------------------+
 
 static void __not_in_flash_func(_process_kbd_report)(hid_keyboard_report_t const *report)
@@ -69,6 +69,10 @@ void handle_keyboard_unmount(tusb_hid_host_info_t* info) {
   // Free up keybouard definitions
   process_kbd_unmount(info->key.elements.dev_addr, info->key.elements.instance);
 }
+
+//--------------------------------------------------------------------+
+// HID Mouse
+//--------------------------------------------------------------------+
 
 void handle_mouse_unmount(tusb_hid_host_info_t* info) {
   TU_LOG1("HID mouse unmount\n");
@@ -96,6 +100,10 @@ void __not_in_flash_func(handle_mouse_report)(tusb_hid_host_info_t* info, const 
     process_mouse_report(&report);
   }
 }
+
+//--------------------------------------------------------------------+
+// HID Joystick/Gamepad
+//--------------------------------------------------------------------+
 
 void __not_in_flash_func(handle_joystick_report)(tusb_hid_host_info_t* info, const uint8_t* report, uint8_t report_length, uint8_t report_id)
 { 
@@ -188,14 +196,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
             }
             break;
           }
-#if 0
-          case HID_USAGE_DESKTOP_GAMEPAD: {
-            printf("HID receive gamepad report description dev_addr=%d instance=%d\r\n", dev_addr, instance);
-            tuh_hid_allocate_info(dev_addr, instance, has_report_id, &handle_gamepad_report, NULL);
-            // May be able to handle this in the same was as a the joystick. Needs a little investigation
-            break;
-          }
-#endif
+
           default: {
             TU_LOG1("HID usage unknown usage:%d\r\n", report->usage);
             break;
@@ -286,3 +287,108 @@ static void __not_in_flash_func(process_generic_report)(uint8_t dev_addr, uint8_
   
   info->handler(info, report, len, rpt_id);
 }
+
+//--------------------------------------------------------------------+
+// XINPUT Gamepad
+//--------------------------------------------------------------------+
+#ifdef USB_JOYSTICK
+usbh_class_driver_t const* usbh_app_driver_get_cb(uint8_t* driver_count) {
+    *driver_count = 1;
+    return &usbh_xinput_driver;
+}
+
+static inline void update_joystate_xinput(uint16_t wButtons, int16_t sThumbLX, int16_t sThumbLY, int16_t sThumbRX, int16_t sThumbRY, uint8_t bLeftTrigger, uint8_t bRightTrigger) {
+    uint8_t dpad = wButtons & 0xf;
+    if (!dpad) {
+        joystate_struct.joy1_x = ((int32_t)sThumbLX + 32768) >> 8;
+        joystate_struct.joy1_y = ((-(int32_t)sThumbLY) + 32767) >> 8;
+    } else {
+        joystate_struct.joy1_x = (dpad & XINPUT_GAMEPAD_DPAD_RIGHT) ? 255 : ((dpad & XINPUT_GAMEPAD_DPAD_LEFT) ? 0 : 127);
+        joystate_struct.joy1_y = (dpad & XINPUT_GAMEPAD_DPAD_DOWN) ? 255 : ((dpad & XINPUT_GAMEPAD_DPAD_UP) ? 0 : 127);
+    }
+    // Analog triggers are mapped to up/down on joystick 1 to emulate throttle/brake for driving games
+    if (bLeftTrigger) {
+        joystate_struct.joy1_y = 127u + (bLeftTrigger >> 1);
+    } else if (bRightTrigger) {
+        joystate_struct.joy1_y = 127u - (bRightTrigger >> 1);
+    }
+    joystate_struct.joy2_x = ((int32_t)sThumbRX + 32768) >> 8;
+    joystate_struct.joy2_y = ((-(int32_t)sThumbRY) + 32767) >> 8;
+    joystate_struct.button_mask = (~(wButtons >> 12)) << 4;
+    /* printf("%04x %04x\n", wButtons, joystate_struct.button_mask); */
+}
+
+void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, xinputh_interface_t const* xid_itf, uint16_t len)
+{
+    const xinput_gamepad_t *p = &xid_itf->pad;
+    /*
+    const char* type_str;
+    switch (xid_itf->type)
+    {
+        case 1: type_str = "Xbox One";          break;
+        case 2: type_str = "Xbox 360 Wireless"; break;
+        case 3: type_str = "Xbox 360 Wired";    break;
+        case 4: type_str = "Xbox OG";           break;
+        default: type_str = "Unknown";
+    }
+    */
+
+    if (xid_itf->connected && xid_itf->new_pad_data) {
+        /*
+        printf("[%02x, %02x], Type: %s, Buttons %04x, LT: %02x RT: %02x, LX: %d, LY: %d, RX: %d, RY: %d\n",
+             dev_addr, instance, type_str, p->wButtons, p->bLeftTrigger, p->bRightTrigger, p->sThumbLX, p->sThumbLY, p->sThumbRX, p->sThumbRY);
+        */
+        update_joystate_xinput(p->wButtons, p->sThumbLX, p->sThumbLY, p->sThumbRX, p->sThumbRY, p->bLeftTrigger, p->bRightTrigger);
+    }
+    tuh_xinput_receive_report(dev_addr, instance);
+}
+
+void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, const xinputh_interface_t *xinput_itf)
+{
+    printf("XINPUT MOUNTED %02x %d\n", dev_addr, instance);
+    // If this is a Xbox 360 Wireless controller we need to wait for a connection packet
+    // on the in pipe before setting LEDs etc. So just start getting data until a controller is connected.
+    if (xinput_itf->type == XBOX360_WIRELESS && xinput_itf->connected == false) {
+        tuh_xinput_receive_report(dev_addr, instance);
+        return;
+    } else if (xinput_itf->type == XBOX360_WIRED) {
+        /*
+         * Some third-party Xbox 360-style controllers require this message to finish initialization.
+         * Idea taken from Linux drivers/input/joystick/xpad.c
+         */
+        uint8_t dummy[20];
+        tusb_control_request_t const request =
+        {
+            .bmRequestType_bit =
+            {
+                .recipient = TUSB_REQ_RCPT_INTERFACE,
+                .type      = TUSB_REQ_TYPE_VENDOR,
+                .direction = TUSB_DIR_IN
+            },
+            .bRequest = tu_htole16(0x01),
+            .wValue   = tu_htole16(0x100),
+            .wIndex   = tu_htole16(0x00),
+            .wLength  = 20
+        };
+        tuh_xfer_t xfer =
+        {
+            .daddr       = dev_addr,
+            .ep_addr     = 0,
+            .setup       = &request,
+            .buffer      = dummy,
+            .complete_cb = NULL,
+            .user_data   = 0
+        };
+        tuh_control_xfer(&xfer);
+    }
+    tuh_xinput_set_led(dev_addr, instance, 0, true);
+    tuh_xinput_set_led(dev_addr, instance, 1, true);
+    tuh_xinput_set_rumble(dev_addr, instance, 0, 0, true);
+    tuh_xinput_receive_report(dev_addr, instance);
+}
+
+void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance)
+{
+    printf("XINPUT UNMOUNTED %02x %d\n", dev_addr, instance);
+}
+#endif

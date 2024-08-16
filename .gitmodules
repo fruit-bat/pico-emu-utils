@@ -1,3 +1,6 @@
 [submodule "src/tusb_xinput"]
 	path = src/tusb_xinput
 	url = https://github.com/Ryzee119/tusb_xinput.git
+[submodule "tusb_xinput"]
+	path = tusb_xinput
+	url = https://github.com/Ryzee119/tusb_xinput.git
