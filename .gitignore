@@ -1,1 +1,3 @@
 **/.vscode
+src/hid_app.c.bak
+src/tusb_config.h.bak
