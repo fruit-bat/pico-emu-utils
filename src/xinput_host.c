@@ -6,8 +6,8 @@
 #if (TUSB_OPT_HOST_ENABLED && CFG_TUH_XINPUT)
 
 #include "host/usbh.h"
-//#include "host/usbh_pvt.h"
-#include "host/usbh_classdriver.h"
+#include "host/usbh_pvt.h"
+//#include "host/usbh_classdriver.h"
 #include "xinput_host.h"
 
 //#include "usbh.h"
@@ -256,9 +256,10 @@ bool tuh_xinput_set_rumble(uint8_t dev_addr, uint8_t instance, uint8_t lValue, u
 //--------------------------------------------------------------------+
 // USBH API
 //--------------------------------------------------------------------+
-void xinputh_init(void)
+bool xinputh_init(void)
 {
     tu_memclr(_xinputh_dev, sizeof(_xinputh_dev));
+    return true;
 }
 
 bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
@@ -360,7 +361,7 @@ bool xinputh_set_config(uint8_t dev_addr, uint8_t itf_num)
     return true;
 }
 
-bool xinputh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
+bool __not_in_flash_func(xinputh_xfer_cb)(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
     uint8_t const dir = tu_edpt_dir(ep_addr);
     uint8_t const instance = get_instance_id_by_epaddr(dev_addr, ep_addr);
@@ -604,8 +605,8 @@ void xinputh_close(uint8_t dev_addr)
 }
 
 #ifndef DRIVER_NAME
-//#if CFG_TUSB_DEBUG >= CFG_TUH_LOG_LEVEL
-#if CFG_TUSB_DEBUG >= 2
+#if CFG_TUSB_DEBUG >= CFG_TUH_LOG_LEVEL
+//#if CFG_TUSB_DEBUG >= 2
   #define DRIVER_NAME(_name)    .name = _name,
 #else
   #define DRIVER_NAME(_name)
