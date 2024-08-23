@@ -28,6 +28,17 @@
 #include "hid_host_joy.h"
 #include "hid_host_mouse.h"
 #include "hid_host_info.h"
+#include "xinput_host.h"
+
+#define BIT0 0x01
+#define BIT1 0x02
+#define BIT2 0x04
+#define BIT3 0x08
+#define BIT4 0x10
+#define BIT5 0x20
+#define BIT6 0x40
+#define BIT7 0x80
+
 
 //--------------------------------------------------------------------+
 // MACRO TYPEDEF CONSTANT ENUM DECLARATION
@@ -48,7 +59,7 @@ void process_mouse_report(hid_mouse_report_t const * report);
 
 static void process_generic_report(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len);
 //--------------------------------------------------------------------+
-// Keyboard
+// HID Keyboard
 //--------------------------------------------------------------------+
 
 static void __not_in_flash_func(_process_kbd_report)(hid_keyboard_report_t const *report)
@@ -69,6 +80,10 @@ void handle_keyboard_unmount(tusb_hid_host_info_t* info) {
   // Free up keybouard definitions
   process_kbd_unmount(info->key.elements.dev_addr, info->key.elements.instance);
 }
+
+//--------------------------------------------------------------------+
+// HID Mouse
+//--------------------------------------------------------------------+
 
 void handle_mouse_unmount(tusb_hid_host_info_t* info) {
   TU_LOG1("HID mouse unmount\n");
@@ -97,6 +112,10 @@ void __not_in_flash_func(handle_mouse_report)(tusb_hid_host_info_t* info, const 
   }
 }
 
+//--------------------------------------------------------------------+
+// HID Joystick/Gamepad
+//--------------------------------------------------------------------+
+
 void __not_in_flash_func(handle_joystick_report)(tusb_hid_host_info_t* info, const uint8_t* report, uint8_t report_length, uint8_t report_id)
 { 
   TU_LOG1("HID receive joystick report\r\n");
@@ -120,9 +139,9 @@ void handle_gamepad_report(tusb_hid_host_info_t* info, const uint8_t* report, ui
 {
   TU_LOG1("HID receive gamepad report ");
   for(int i = 0; i < report_length; ++i) {
-    printf("%02x", report[i]);
+    TU_LOG2("%02x", report[i]);
   }
-  printf("\r\n");
+  TU_LOG2("\r\n");
 }
 
 //--------------------------------------------------------------------+
@@ -188,14 +207,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
             }
             break;
           }
-#if 0
-          case HID_USAGE_DESKTOP_GAMEPAD: {
-            printf("HID receive gamepad report description dev_addr=%d instance=%d\r\n", dev_addr, instance);
-            tuh_hid_allocate_info(dev_addr, instance, has_report_id, &handle_gamepad_report, NULL);
-            // May be able to handle this in the same was as a the joystick. Needs a little investigation
-            break;
-          }
-#endif
+
           default: {
             TU_LOG1("HID usage unknown usage:%d\r\n", report->usage);
             break;
@@ -259,7 +271,7 @@ void __not_in_flash_func(tuh_hid_report_received_cb)(uint8_t dev_addr, uint8_t i
   // continue to request to receive report
   if ( !tuh_hid_receive_report(dev_addr, instance) )
   {
-    printf("Error: cannot request to receive report\r\n");
+    TU_LOG2("Error: cannot request to receive report\r\n");
   }
 }
 
@@ -272,7 +284,7 @@ static void __not_in_flash_func(process_generic_report)(uint8_t dev_addr, uint8_
   
   if (info == NULL)
   {
-    printf("Couldn't find the host report info for dev_addr=%d instance=%d\r\n", dev_addr, instance);
+    TU_LOG2("Couldn't find the host report info for dev_addr=%d instance=%d\r\n", dev_addr, instance);
     return;
   }
   
@@ -286,3 +298,163 @@ static void __not_in_flash_func(process_generic_report)(uint8_t dev_addr, uint8_
   
   info->handler(info, report, len, rpt_id);
 }
+
+//--------------------------------------------------------------------+
+// XINPUT Gamepad
+//--------------------------------------------------------------------+
+#define USB_XINPUT_JOYSTICK
+#ifdef USB_XINPUT_JOYSTICK
+usbh_class_driver_t const* usbh_app_driver_get_cb(uint8_t* driver_count) {
+    *driver_count = 1;
+    return &usbh_xinput_driver;
+}
+
+enum Direction {
+    North = 0,
+    NorthEast,
+    East,
+    SouthEast,
+    South,
+    SouthWest,
+    West,
+    NorthWest,
+    None = 8
+};
+/*
+
+        U
+        | 
+   L----+----R
+        | 
+        D
+
+        N
+        | 
+   W----+----E
+        | 
+        S
+
+
+#define XINPUT_GAMEPAD_DPAD_UP 0x0001
+#define XINPUT_GAMEPAD_DPAD_DOWN 0x0002
+#define XINPUT_GAMEPAD_DPAD_LEFT 0x0004
+#define XINPUT_GAMEPAD_DPAD_RIGHT 0x0008
+
+0x00,None
+0x01,North      //XINPUT_GAMEPAD_DPAD_UP
+0x02,South      //XINPUT_GAMEPAD_DPAD_DOWN
+0x03,None
+0x04,West       //XINPUT_GAMEPAD_DPAD_LEFT
+0x05,NorthWest  //XINPUT_GAMEPAD_DPAD_UP|XINPUT_GAMEPAD_DPAD_LEFT
+0x06,SouthWest  //XINPUT_GAMEPAD_DPAD_DOWN|XINPUT_GAMEPAD_DPAD_LEFT
+0x07,None
+0x08,East       //XINPUT_GAMEPAD_DPAD_RIGHT
+0x09,NorthEast  //XINPUT_GAMEPAD_DPAD_UP|XINPUT_GAMEPAD_DPAD_RIGHT
+0x0A,SouthEast  //XINPUT_GAMEPAD_DPAD_DOWN|XINPUT_GAMEPAD_DPAD_RIGHT
+0x0B,None
+0x0C,None
+0x0D,None
+0x0E,None
+0x0F,None
+*/
+
+const uint8_t hattable[16]={None,North,South,None,West,NorthWest,SouthWest,None,East,NorthEast,SouthEast,None,None,None,None,None};
+
+void __not_in_flash_func(tuh_xinput_report_received_cb)(uint8_t dev_addr, uint8_t instance, xinputh_interface_t const* xid_itf, uint16_t len)
+{
+    const xinput_gamepad_t *p = &xid_itf->pad;
+  
+    if (xid_itf->connected && xid_itf->new_pad_data) {
+        TU_LOG1("HID receive joystick report\r\n");
+        tusb_hid_simple_joystick_t* joystick = tuh_hid_get_simple_joystick(dev_addr, instance, 0);
+            
+        if (joystick != NULL) {
+            tusb_hid_simple_joystick_values_t* values = &joystick->values;
+            values->x1 = p->sThumbLX;
+            values->y1 = - p->sThumbLY;
+            values->x2 = p->sThumbRX;
+            values->y2 = - p->sThumbRY;
+
+            values->hat = hattable[p->wButtons & 0x0F];
+
+            values->buttons=0;
+            if (p->wButtons & XINPUT_GAMEPAD_A) values->buttons|=BIT0;
+            if (p->wButtons & XINPUT_GAMEPAD_B) values->buttons|=BIT1;
+            if (p->wButtons & XINPUT_GAMEPAD_X) values->buttons|=BIT2;
+            if (p->wButtons & XINPUT_GAMEPAD_Y) values->buttons|=BIT3;
+           
+            joystick->has_values = true;
+            joystick->updated = board_millis();
+         }
+
+        //update_joystate_xinput(p->wButtons, p->sThumbLX, p->sThumbLY, p->sThumbRX, p->sThumbRY, p->bLeftTrigger, p->bRightTrigger);
+    }
+    tuh_xinput_receive_report(dev_addr, instance);
+}
+
+void tuh_xinput_mount_cb(uint8_t dev_addr, uint8_t instance, const xinputh_interface_t *xinput_itf)
+{
+    TU_LOG1("XINPUT MOUNTED %02x %d\n", dev_addr, instance);
+    // If this is a Xbox 360 Wireless controller we need to wait for a connection packet
+    // on the in pipe before setting LEDs etc. So just start getting data until a controller is connected.
+    if (xinput_itf->type == XBOX360_WIRELESS && xinput_itf->connected == false) {
+        tuh_xinput_receive_report(dev_addr, instance);
+        return;
+    } else if (xinput_itf->type == XBOX360_WIRED) {
+        /*
+         * Some third-party Xbox 360-style controllers require this message to finish initialization.
+         * Idea taken from Linux drivers/input/joystick/xpad.c
+         */
+        uint8_t dummy[20];
+        tusb_control_request_t const request =
+        {
+            .bmRequestType_bit =
+            {
+                .recipient = TUSB_REQ_RCPT_INTERFACE,
+                .type      = TUSB_REQ_TYPE_VENDOR,
+                .direction = TUSB_DIR_IN
+            },
+            .bRequest = tu_htole16(0x01),
+            .wValue   = tu_htole16(0x100),
+            .wIndex   = tu_htole16(0x00),
+            .wLength  = 20
+        };
+        tuh_xfer_t xfer =
+        {
+            .daddr       = dev_addr,
+            .ep_addr     = 0,
+            .setup       = &request,
+            .buffer      = dummy,
+            .complete_cb = NULL,
+            .user_data   = 0
+        };
+        tuh_control_xfer(&xfer);
+    }
+    tuh_xinput_set_led(dev_addr, instance, 0, true);
+    tuh_xinput_set_led(dev_addr, instance, 1, true);
+    tuh_xinput_set_rumble(dev_addr, instance, 0, 0, true);
+    tuh_xinput_receive_report(dev_addr, instance);
+
+    tusb_hid_simple_joystick_t* joystick = tuh_hid_obtain_simple_joystick(dev_addr, instance, 0);
+
+    if (joystick!=NULL) {
+      joystick->axis_x1.logical_min=-32768/2;
+      joystick->axis_x1.logical_max= 32768/2;
+      joystick->axis_y1.logical_min=-32768/2;
+      joystick->axis_y1.logical_max= 32768/2;
+      joystick->axis_x2.logical_min=-32768/2;
+      joystick->axis_x2.logical_max= 32768/2;
+      joystick->axis_y2.logical_min=-32768/2;
+      joystick->axis_y2.logical_max= 32768/2;
+      joystick->hat.length = 1;
+      joystick->hat.logical_max = 7;
+    }
+}
+
+void tuh_xinput_umount_cb(uint8_t dev_addr, uint8_t instance)
+{
+    //printf("XINPUT UNMOUNTED %02x %d\n", dev_addr, instance);
+    tuh_hid_free_simple_joysticks_for_instance(dev_addr, instance);
+}
+
+#endif

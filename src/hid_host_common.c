@@ -45,7 +45,7 @@ bool tuh_hid_get_simple_input_data(
   
   return true;
 }
-
+/*
 void tuh_hid_process_simple_axis(
   tuh_hid_simple_input_data_t* jdata,
   uint32_t bitpos,
@@ -56,4 +56,23 @@ void tuh_hid_process_simple_axis(
   simple_axis->flags.is_signed = jdata->logical_min < 0;
   simple_axis->logical_min = jdata->logical_min;
   simple_axis->logical_max = jdata->logical_max;
+}
+*/
+void tuh_hid_process_simple_axis(
+  tuh_hid_simple_input_data_t* jdata,
+  uint32_t bitpos,
+  tusb_hid_simple_axis_t* simple_axis)
+{
+  simple_axis->start = (uint16_t)bitpos;
+  simple_axis->length = (uint16_t)jdata->report_size;
+  simple_axis->flags.is_signed = jdata->logical_min < 0;
+
+  if  (simple_axis->flags.is_signed) {
+    simple_axis->logical_min = jdata->logical_min/2;
+    simple_axis->logical_max = jdata->logical_max/2;
+  } else {
+    int quater=(jdata->logical_max-jdata->logical_min)/4;
+    simple_axis->logical_min = jdata->logical_min+quater;
+    simple_axis->logical_max = jdata->logical_max-quater;
+  }
 }
