@@ -12,12 +12,6 @@ target_sources(pico_emu_utils INTERFACE
 	${CMAKE_CURRENT_LIST_DIR}/src/OutputStream.cpp
 	${CMAKE_CURRENT_LIST_DIR}/src/SdCardFatFsSpi.cpp
 	${CMAKE_CURRENT_LIST_DIR}/src/SizingOutputStream.cpp
-	${CMAKE_CURRENT_LIST_DIR}/src/hid_host_common.c
-	${CMAKE_CURRENT_LIST_DIR}/src/hid_host_utils.c
-	${CMAKE_CURRENT_LIST_DIR}/src/hid_host_joy.c
-	${CMAKE_CURRENT_LIST_DIR}/src/hid_host_mouse.c
-	${CMAKE_CURRENT_LIST_DIR}/src/hid_host_info.c
-	${CMAKE_CURRENT_LIST_DIR}/src/hid_app.c
 	${CMAKE_CURRENT_LIST_DIR}/src/ps2kbd.cpp
 	${CMAKE_CURRENT_LIST_DIR}/src/ff_util.c
 	${CMAKE_CURRENT_LIST_DIR}/src/FatFsFilePath.cpp
@@ -25,7 +19,6 @@ target_sources(pico_emu_utils INTERFACE
 	${CMAKE_CURRENT_LIST_DIR}/src/FatFsDirCacheOutputStream.cpp
 	${CMAKE_CURRENT_LIST_DIR}/src/FatFsDirCache.cpp
 	${CMAKE_CURRENT_LIST_DIR}/src/FatFsDirCacheSorter.cpp
-	${CMAKE_CURRENT_LIST_DIR}/src/xinput_host.c
 )
 
 target_include_directories(pico_emu_utils INTERFACE
