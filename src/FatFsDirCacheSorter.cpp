@@ -41,7 +41,7 @@ bool FatFsDirCacheSorter::read(uint32_t i, FILINFO *info) {
   bool r = _is->read(xi, info);
 #ifdef DEBUG_FAT_SPI
   if (r) {
-    DBG_PRINTF("FatFsDirCacheSorter: read element at %d '%s' \n", xi, info->fname);    
+  //  DBG_PRINTF("FatFsDirCacheSorter: read element at %d '%s' \n", xi, info->fname);    
   }
   else {
     DBG_PRINTF("FatFsDirCacheSorter: error reading element at %d\n", xi);    
@@ -101,6 +101,8 @@ bool FatFsDirCacheSorter::lampSort() {
       
     if (!pop(&low, &high)) return false;
     
+    DBG_PRINTF("FatFsDirCacheSorter: span %d %d\n", low, high);    
+
     int16_t span = high - low;
     
     if (span >= 2) {

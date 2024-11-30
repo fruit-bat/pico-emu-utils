@@ -123,6 +123,7 @@ void FatFsDirCache::remove(const char *name) {
 }
 
 void FatFsDirCache::reload() {
+  DBG_PRINTF("FatFsDirCache: reload\n");
   if (!_sdCard->mounted()) {   
     if (!_sdCard->mount()) {
       DBG_PRINTF("FatFsDirCache: failed to mount SD card\n");
@@ -131,10 +132,14 @@ void FatFsDirCache::reload() {
   }  
   close();
   remove(".dcache");
+  remove(".dcache.tmp");
   create();
+  DBG_PRINTF("FatFsDirCache: sort start\n");
   sort();
+  DBG_PRINTF("FatFsDirCache: sort end\n");
   remove(".dcache.tmp");
   open();
+  DBG_PRINTF("FatFsDirCache: ready\n");
 }
 
 void FatFsDirCache::load() {
