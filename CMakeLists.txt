@@ -1,6 +1,9 @@
 add_library(pico_emu_utils INTERFACE)
 
-pico_generate_pio_header(pico_emu_utils ${CMAKE_CURRENT_LIST_DIR}/src/ps2kbd.pio)
+pico_generate_pio_header(pico_emu_utils ${CMAKE_CURRENT_LIST_DIR}/src/ps2kbd_clk0_dat.pio)
+pico_generate_pio_header(pico_emu_utils ${CMAKE_CURRENT_LIST_DIR}/src/ps2kbd_clk2_dat.pio)
+pico_generate_pio_header(pico_emu_utils ${CMAKE_CURRENT_LIST_DIR}/src/ps2kbd_clk6_dat.pio)
+pico_generate_pio_header(pico_emu_utils ${CMAKE_CURRENT_LIST_DIR}/src/ps2kbd_dat_clk.pio)
 
 target_sources(pico_emu_utils INTERFACE
 	${CMAKE_CURRENT_LIST_DIR}/src/ArrayInputStream.cpp

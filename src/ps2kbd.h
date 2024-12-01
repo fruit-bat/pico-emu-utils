@@ -11,6 +11,26 @@
 #include "hardware/gpio.h"
 #include <functional>
 
+#if defined(PS2KBD_CLK0_DAT) 
+#define PS2KBD_GPIO_DAT_OFFSET 1
+#define PS2KBD_GPIO_PROG "ps2kbd_clk0_dat.pio.h"
+#define PS2KBD_GPIO 0
+#elif defined(PS2KBD_CLK2_DAT)
+#define PS2KBD_GPIO_DAT_OFFSET 1
+#define PS2KBD_GPIO_PROG "ps2kbd_clk2_dat.pio.h"
+#define PS2KBD_GPIO 2
+#elif defined(PS2KBD_CLK6_DAT)
+#define PS2KBD_GPIO_DAT_OFFSET 1
+#define PS2KBD_GPIO_PROG "ps2kbd_clk6_dat.pio.h"
+#define PS2KBD_GPIO 6
+#else
+#define PS2KBD_GPIO_PROG "ps2kbd_dat_clk.pio.h"
+#ifndef PS2KBD_GPIO
+#define PS2KBD_GPIO 6
+#endif
+#define PS2KBD_GPIO_DAT_OFFSET 0
+#endif
+
 typedef struct {
   uint8_t code;
   bool release;

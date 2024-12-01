@@ -9,7 +9,7 @@
 // https://wiki.osdev.org/PS/2_Keyboard
 //
 #include "ps2kbd.h"
-#include "ps2kbd.pio.h"
+#include PS2KBD_GPIO_PROG
 #include "hardware/clocks.h"
 
 #ifdef DEBUG_PS2
@@ -373,8 +373,8 @@ void Ps2Kbd::tick() {
 // TODO Error checking and reporting
 void Ps2Kbd::init_gpio() {
     // init KBD pins to input
-    gpio_init(_base_gpio);     // Data
-    gpio_init(_base_gpio + 1); // Clock
+    pio_gpio_init(_pio, _base_gpio);
+    pio_gpio_init(_pio, _base_gpio + 1);
     // with pull up
     gpio_pull_up(_base_gpio);
     gpio_pull_up(_base_gpio + 1);
@@ -387,7 +387,7 @@ void Ps2Kbd::init_gpio() {
     // program the start and wrap SM registers
     pio_sm_config c = ps2kbd_program_get_default_config(offset);
     // Set the base input pin. pin index 0 is DAT, index 1 is CLK
-    sm_config_set_in_pins(&c, _base_gpio);
+    sm_config_set_in_pins(&c, _base_gpio + PS2KBD_GPIO_DAT_OFFSET);
     // Shift 8 bits to the right, autopush enabled
     sm_config_set_in_shift(&c, true, true, 10);
     // Deeper FIFO as we're not doing any TX
