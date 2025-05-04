@@ -37,5 +37,6 @@ void SdCardFatFsSpi::unmount() {
     DBG_PRINTF("Unmounting SD card %d... ", _unit);
     f_unmount("");
     DBG_PRINTF("Ok\n");
+    _mounted = false;
   }
 }
